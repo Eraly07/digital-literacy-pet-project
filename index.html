@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="ai-endpoint" content="https://ppp-h9xn.onrender.com">
+<title>ЦифрСауат</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<!-- Optional: if your AI backend is on a different domain, set its URL here -->
+<!-- <meta name="ai-endpoint" content="https://your-backend.example.com/api/ai"> -->
+</head>
+<body>
+
+<!-- CANVAS PARTICLES -->
+<canvas id="particles"></canvas>
+
+<!-- MODAL -->
+<div class="mbg" id="nm">
+  <div class="mbox">
+    <h3>[ NAME ]</h3>
+    <p data-kk="Тест нәтижесі рейтингке қосылады" data-ru="Результат будет добавлен в рейтинг">Тест нәтижесі рейтингке қосылады</p>
+    <input class="minput" id="ni" placeholder="атынызды жазыңыз..." maxlength="24">
+    <button class="gbtn" style="width:100%" onclick="saveName()">
+      <span data-kk="КІРУ →" data-ru="ВОЙТИ →">КІРУ →</span>
+    </button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">ЦифрСауат</div>
+    <button class="toggle-btn" id="sideToggle" onclick="toggleSidebar()" title="Toggle">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </svg>
+    </button>
+  </div>
+
+  <nav>
+    <div class="nav-group">
+      <button class="nav-item active" onclick="go('home')">
+        <span class="ni">🏠</span><span class="nl" data-kk="Басты бет" data-ru="Главная">Басты бет</span>
+      </button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="ҮЙРЕНУ" data-ru="ОБУЧЕНИЕ">ҮЙРЕНУ</div>
+      <button class="nav-item" onclick="go('info')">
+        <span class="ni">📖</span><span class="nl" data-kk="Ақпарат" data-ru="Информация">Ақпарат</span>
+      </button>
+      <button class="nav-item" onclick="go('tips')">
+        <span class="ni">💡</span><span class="nl" data-kk="Кеңестер" data-ru="Советы">Кеңестер</span>
+      </button>
+      <button class="nav-item" onclick="go('courses')">
+        <span class="ni">🎓</span><span class="nl" data-kk="Курстар" data-ru="Курсы">Курстар</span>
+      </button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="ПРАКТИКА" data-ru="ПРАКТИКА">ПРАКТИКА</div>
+      <button class="nav-item" onclick="go('ai')">
+        <span class="ni">🤖</span><span class="nl">AI Симулятор</span>
+      </button>
+      <button class="nav-item" onclick="go('quiz')">
+        <span class="ni">🧠</span><span class="nl" data-kk="Тест" data-ru="Тест">Тест</span>
+      </button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="БАСҚА" data-ru="ДРУГОЕ">БАСҚА</div>
+      <button class="nav-item" onclick="go('lb')">
+        <span class="ni">🏆</span><span class="nl" data-kk="Рейтинг" data-ru="Рейтинг">Рейтинг</span>
+      </button>
+      <button class="nav-item" onclick="go('survey')">
+        <span class="ni">📋</span><span class="nl" data-kk="Сауалнама" data-ru="Опрос">Сауалнама</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="lang-btn" id="lb2" onclick="toggleLang()">
+      <span class="ni">🌐</span>
+      <span class="nl" id="langLabel">Русский</span>
+    </button>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-mark" style="font-family:'Orbitron',monospace;font-size:.8rem;color:var(--teal);">ЦС</div>
+  <button class="nav-item" onclick="go('home')">⬡</button>
+  <button class="nav-item" onclick="go('info')">◈</button>
+  <button class="nav-item" onclick="go('tips')">◆</button>
+  <button class="nav-item" onclick="go('ai')">◉ AI</button>
+  <button class="nav-item" onclick="go('quiz')">◎</button>
+  <button class="nav-item" onclick="go('lb')">🏆</button>
+  <button class="nav-item" onclick="go('courses')">▣</button>
+  <button class="nav-item" onclick="go('survey')">◇</button>
+  <button class="lang-btn" id="lb3" onclick="toggleLang()" style="font-size:.68rem;padding:.3rem .5rem;white-space:nowrap;flex-shrink:0;">RU</button>
+</div>
+
+<div class="shell">
+  <div></div><!-- sidebar placeholder -->
+  <main class="main">
+
+    <!-- HOME -->
+    <section id="home" class="page active" style="max-width:100%">
+      <div class="home-inner">
+        <div class="home-badge">// <span data-kk="КОЛЛЕДЖ СТУДЕНТТЕРІНЕ" data-ru="ДЛЯ СТУДЕНТОВ">КОЛЛЕДЖ СТУДЕНТТЕРІНЕ</span></div>
+        <h1 class="home-title">
+          <span class="t" data-kk="ЦИФРЛЫҚ" data-ru="ЦИФРОВАЯ">ЦИФРЛЫҚ</span><br>
+          <span class="glitch" data-text="ҚАУІПСІЗДІК" data-kk-text="ҚАУІПСІЗДІК" data-ru-text="БЕЗОПАСНОСТЬ" style="position:relative;">ҚАУІПСІЗДІК</span><br>
+          <span style="font-size:0.45em;color:var(--muted2);font-weight:400;font-family:'Manrope',sans-serif;letter-spacing:1px;" data-kk="— болашаққа дайындық" data-ru="— подготовка к будущему">— болашаққа дайындық</span>
+        </h1>
+        <p class="home-desc" data-kk="Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал." data-ru="Научись защищать себя от угроз в интернете. Тренируй реальные ситуации с AI симулятором, пройди тест, получи сертификат.">Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал.</p>
+        <div class="home-grid">
+          <div class="hcard" onclick="go('ai')">
+            <span class="hcard-icon">◉</span>
+            <div class="hcard-title">AI SIM</div>
+            <div class="hcard-desc" data-kk="Нақты жағдайлар" data-ru="Реальные ситуации">Нақты жағдайлар</div>
+          </div>
+          <div class="hcard" onclick="go('quiz')">
+            <span class="hcard-icon">◎</span>
+            <div class="hcard-title" data-kk="ТЕСТ" data-ru="ТЕСТ">ТЕСТ</div>
+            <div class="hcard-desc" data-kk="10 сұрақ + сертификат" data-ru="10 вопросов + сертификат">10 сұрақ + сертификат</div>
+          </div>
+          <div class="hcard" onclick="go('tips')">
+            <span class="hcard-icon">◆</span>
+            <div class="hcard-title" data-kk="КЕҢЕСТЕР" data-ru="СОВЕТЫ">КЕҢЕСТЕР</div>
+            <div class="hcard-desc" data-kk="Қорғаныш ережелері" data-ru="Правила защиты">Қорғаныш ережелері</div>
+          </div>
+          <div class="hcard" onclick="go('courses')">
+            <span class="hcard-icon">▣</span>
+            <div class="hcard-title" data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</div>
+            <div class="hcard-desc" data-kk="Тегін ресурстар" data-ru="Бесплатные ресурсы">Тегін ресурстар</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INFO -->
+    <section id="info" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="НЕГІЗДЕР" data-ru="ОСНОВЫ">НЕГІЗДЕР</span></div>
+        <h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>дегеніміз</span> не?" data-ru="Что такое цифровая <span class='acc'>грамотность</span>?">Цифрлық сауаттылық <span class="acc">дегеніміз</span> не?</h1>
+        <p class="ph-desc" data-kk="Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті." data-ru="Умение эффективно, безопасно и ответственно использовать цифровые технологии.">Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті.</p>
+      </div>
+      <div class="grid-3">
+        <div class="ncard"><div class="ncard-icon">💻</div><h3 data-kk="Технологиялық дағдылар" data-ru="Технологические навыки">Технологиялық дағдылар</h3><p data-kk="Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу." data-ru="Умение использовать компьютер, смартфон и цифровые платформы.">Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу.</p></div>
+        <div class="ncard"><div class="ncard-icon">🔒</div><h3 data-kk="Ақпараттық қауіпсіздік" data-ru="Информационная безопасность">Ақпараттық қауіпсіздік</h3><p data-kk="Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану." data-ru="Защита личных данных, надёжные пароли, защита от фишинга.">Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану.</p></div>
+        <div class="ncard"><div class="ncard-icon">🔍</div><h3 data-kk="Ақпаратты бағалау" data-ru="Оценка информации">Ақпаратты бағалау</h3><p data-kk="Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату." data-ru="Проверка достоверности информации, определение надёжных источников.">Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату.</p></div>
+        <div class="ncard"><div class="ncard-icon">🤝</div><h3 data-kk="Цифрлық этика" data-ru="Цифровая этика">Цифрлық этика</h3><p data-kk="Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау." data-ru="Ответственное поведение онлайн, уважение авторских прав.">Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау.</p></div>
+        <div class="ncard"><div class="ncard-icon">📚</div><h3 data-kk="Цифрлық оқу" data-ru="Цифровое обучение">Цифрлық оқу</h3><p data-kk="Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру." data-ru="Эффективное обучение через онлайн-курсы и e-learning.">Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру.</p></div>
+        <div class="ncard"><div class="ncard-icon">🌐</div><h3 data-kk="Желілік мәдениет" data-ru="Сетевая культура">Желілік мәдениет</h3><p data-kk="Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау." data-ru="Правильное общение в соцсетях, создание профессионального имиджа.">Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау.</p></div>
+      </div>
+    </section>
+
+    <!-- TIPS -->
+    <section id="tips" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="ҚАУІПСІЗДІК" data-ru="БЕЗОПАСНОСТЬ">ҚАУІПСІЗДІК</span></div>
+        <h1 class="ph-title" data-kk="Цифрлық қауіпсіздік <span class='acc'>кеңестері</span>" data-ru="Советы по <span class='acc'>цифровой безопасности</span>">Цифрлық қауіпсіздік <span class="acc">кеңестері</span></h1>
+      </div>
+      <div>
+        <div class="tip-row"><div class="tip-n">01</div><div><h4>🔑 <span data-kk="Күшті пароль жаса" data-ru="Создай надёжный пароль">Күшті пароль жаса</span></h4><p data-kk="12+ символ: үлкен-кіші әріп, сан, арнайы белгі. Bitwarden немесе LastPass менеджері пайдалан." data-ru="12+ символов: разные регистры, цифры, спецсимволы. Используй менеджер паролей.">12+ символ: үлкен-кіші әріп, сан, арнайы белгі. Bitwarden немесе LastPass менеджері пайдалан.</p></div></div>
+        <div class="tip-row"><div class="tip-n">02</div><div><h4>✅ <span data-kk="2FA қос" data-ru="Включи 2FA">2FA қос</span></h4><p data-kk="Google, Instagram, VK — барлық маңызды аккаунтта екі факторлы аутентификация қос." data-ru="Включи двухфакторную аутентификацию на всех важных аккаунтах.">Google, Instagram, VK — барлық маңызды аккаунтта екі факторлы аутентификация қос.</p></div></div>
+        <div class="tip-row"><div class="tip-n">03</div><div><h4>🚫 <span data-kk="Фишингтен сақтан" data-ru="Берегись фишинга">Фишингтен сақтан</span></h4><p data-kk="Күдікті сілтемелерге баспа. Банк ешқашан SMS арқылы пароль сұрамайды." data-ru="Не нажимай подозрительные ссылки. Банк никогда не запрашивает пароль через SMS.">Күдікті сілтемелерге баспа. Банк ешқашан SMS арқылы пароль сұрамайды.</p></div></div>
+        <div class="tip-row"><div class="tip-n">04</div><div><h4>🌐 <span data-kk="Ашық Wi-Fi абайла" data-ru="Осторожно с открытым Wi-Fi">Ашық Wi-Fi абайла</span></h4><p data-kk="Жалпы желіде банктік операция жасама. VPN трафигіңді шифрлайды." data-ru="Не заходи в банк через открытый Wi-Fi. VPN шифрует твой трафик.">Жалпы желіде банктік операция жасама. VPN трафигіңді шифрлайды.</p></div></div>
+        <div class="tip-row"><div class="tip-n">05</div><div><h4>🤖 <span data-kk="AI-ды ақылмен пайдалан" data-ru="Используй AI разумно">AI-ды ақылмен пайдалан</span></h4><p data-kk="ChatGPT-ке паспорт, ИИН, пароль кіргізбе. AI жауаптарын тексер." data-ru="Не вводи в ChatGPT паспортные данные, ИИН, пароли. Проверяй ответы AI.">ChatGPT-ке паспорт, ИИН, пароль кіргізбе. AI жауаптарын тексер.</p></div></div>
+        <div class="tip-row"><div class="tip-n">06</div><div><h4>📱 <span data-kk="Қосымша рұқсаттарын тексер" data-ru="Проверяй разрешения приложений">Қосымша рұқсаттарын тексер</span></h4><p data-kk="Ойын неге контактыларға кіруі керек? Артық рұқсат — жеке деректер қаупі." data-ru="Зачем игре доступ к контактам? Лишние разрешения — угроза данным.">Ойын неге контактыларға кіруі керек? Артық рұқсат — жеке деректер қаупі.</p></div></div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section id="ai" class="page">
+      <div class="ph">
+        <div class="ph-tag">// AI SIMULATOR</div>
+        <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
+        <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде алаяқ тактикасын зерттейсің." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции изучай тактику мошенников.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде алаяқ тактикасын зерттейсің.</p>
+      </div>
+      <div class="sim-wrap">
+        <div class="sim-in">
+          <div class="sim-tabs">
+            <button class="stab on" id="t1" onclick="setSim('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
+            <button class="stab" id="t2" onclick="setSim('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
+          </div>
+          <p class="sim-md" id="smd"></p>
+          <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
+          <div class="chip-wrap" id="chips"></div>
+          <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
+          <button class="gbtn" id="sbtn" onclick="sendAI()" style="width:100%">
+            ◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span>
+          </button>
+        </div>
+        <div class="sim-out" id="sout">
+          <div class="sim-empty" id="se">
+            <div class="sim-empty-ico">◉</div>
+            <span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span>
+          </div>
+          <div class="dots-loader" id="sl"><span></span><span></span><span></span></div>
+          <div id="sr" style="display:none"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quiz" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="ӨЗІҢДІ ТЕКСЕР" data-ru="ПРОВЕРЬ СЕБЯ">ӨЗІҢДІ ТЕКСЕР</span></div>
+        <h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>тесті</span>" data-ru="Тест по <span class='acc'>цифровой грамотности</span>">Цифрлық сауаттылық <span class="acc">тесті</span></h1>
+        <p class="ph-desc" data-kk="10 сұрақ. 60%+ болса сертификат жүктеуге болады." data-ru="10 вопросов. При 60%+ можно скачать сертификат.">10 сұрақ. 60%+ болса сертификат жүктеуге болады.</p>
+      </div>
+      <div class="qwrap">
+        <div class="qprog-bg"><div class="qprog-fill" id="qp" style="width:0%"></div></div>
+        <div id="qb"></div>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="lb" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="РЕЙТИНГ" data-ru="РЕЙТИНГ">РЕЙТИНГ</span></div>
+        <h1 class="ph-title" data-kk="Ең жоғары <span class='acc'>нәтижелер</span>" data-ru="Лучшие <span class='acc'>результаты</span>">Ең жоғары <span class="acc">нәтижелер</span></h1>
+      </div>
+      <div class="lbtable">
+        <div class="lbhead"><div>#</div><div data-kk="АТЫ" data-ru="ИМЯ">АТЫ</div><div data-kk="ҰПАЙ" data-ru="ОЧКИ">ҰПАЙ</div><div data-kk="КҮНІ" data-ru="ДАТА">КҮНІ</div></div>
+        <div id="lbb"></div>
+      </div>
+      <p style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;" data-kk="// деректер тек осы браузерде" data-ru="// данные только в этом браузере">// деректер тек осы браузерде</p>
+    </section>
+
+
+    <!-- COURSES -->
+    <section id="courses" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</span></div>
+        <h1 class="ph-title" data-kk="Тегін оқу <span class='acc'>ресурстары</span>" data-ru="Бесплатные учебные <span class='acc'>ресурсы</span>">Тегін оқу <span class="acc">ресурстары</span></h1>
+      </div>
+      <div class="clist">
+        <a class="citem" href="https://learndigital.withgoogle.com/digitalgarage" target="_blank"><div class="cico">🌐</div><div class="cinfo"><h4>Google Digital Garage</h4><p data-kk="Цифрлық дағдылар + сертификат" data-ru="Цифровые навыки + сертификат">Цифрлық дағдылар + сертификат</p><div class="ctag">GOOGLE · ТЕГІН · CERT</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://stepik.org/catalog?q=информационная+безопасность" target="_blank"><div class="cico">🛡️</div><div class="cinfo"><h4 data-kk="Ақпараттық қауіпсіздік — Stepik" data-ru="Информационная безопасность — Stepik">Ақпараттық қауіпсіздік — Stepik</h4><p data-kk="Орысша бастауыш курстар" data-ru="Начальные курсы на русском">Орысша бастауыш курстар</p><div class="ctag">STEPIK · ТЕГІН</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://www.youtube.com/@NetworkChuck/playlists" target="_blank"><div class="cico">📡</div><div class="cinfo"><h4>NetworkChuck Playlists</h4><p data-kk="Security+, Hacking, Linux, Python" data-ru="Security+, Hacking, Linux, Python">Security+, Hacking, Linux, Python</p><div class="ctag">YOUTUBE · 4.3M · ТЕГІН</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://www.kaspersky.ru/blog/category/threats" target="_blank"><div class="cico">🔐</div><div class="cinfo"><h4 data-kk="Kaspersky блогы" data-ru="Блог Kaspersky">Kaspersky блогы</h4><p data-kk="Жаңа қауіп-қатерлер мен қорғаныс" data-ru="Актуальные угрозы и защита">Жаңа қауіп-қатерлер мен қорғаныс</p><div class="ctag">KASPERSKY · ТЕГІН</div></div><div class="carr">→</div></a>
+      </div>
+    </section>
+
+    <!-- SURVEY -->
+    <section id="survey" class="page">
+      <div class="ph">
+        <div class="ph-tag">// <span data-kk="ЗЕРТТЕУ" data-ru="ИССЛЕДОВАНИЕ">ЗЕРТТЕУ</span></div>
+        <h1 class="ph-title" data-kk="<span class='acc'>Сауалнама</span>" data-ru="<span class='acc'>Опрос</span>"><span class="acc">Сауалнама</span></h1>
+        <p class="ph-desc" data-kk="Зерттеу жұмысы үшін сауалнамаға қатысыңыз." data-ru="Примите участие в опросе для исследования.">Зерттеу жұмысы үшін сауалнамаға қатысыңыз.</p>
+      </div>
+      <div class="sform">
+        <div id="sf">
+          <div class="sq"><div class="sql" data-kk="1. Күніне орташа қанша сағат интернет пайдаланасыз?" data-ru="1. Сколько часов в день вы пользуетесь интернетом?">1. Күніне орташа қанша сағат интернет пайдаланасыз?</div><div class="ropts"><label class="ropt"><input type="radio" name="q1" value="1"><span data-kk="1–2 сағат" data-ru="1–2 часа">1–2 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="2"><span data-kk="3–4 сағат" data-ru="3–4 часа">3–4 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="3"><span data-kk="5–6 сағат" data-ru="5–6 часов">5–6 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="4"><span data-kk="6+ сағат" data-ru="6+ часов">6+ сағат</span></label></div></div>
+          <div class="sq"><div class="sql" data-kk="2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?" data-ru="2. Используете одинаковый пароль для всех аккаунтов?">2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?</div><div class="ropts"><label class="ropt"><input type="radio" name="q2" value="yes"><span data-kk="Иә" data-ru="Да">Иә</span></label><label class="ropt"><input type="radio" name="q2" value="sometimes"><span data-kk="Кейде бірдей" data-ru="Иногда одинаковые">Кейде бірдей</span></label><label class="ropt"><input type="radio" name="q2" value="no"><span data-kk="Жоқ, бөлек" data-ru="Нет, разные">Жоқ, бөлек</span></label></div></div>
+          <div class="sq"><div class="sql" data-kk="3. Фишинг дегенді білесіз бе?" data-ru="3. Знаете ли вы, что такое фишинг?">3. Фишинг дегенді білесіз бе?</div><div class="ropts"><label class="ropt"><input type="radio" name="q3" value="yes"><span data-kk="Иә, жақсы білемін" data-ru="Да, хорошо знаю">Иә, жақсы білемін</span></label><label class="ropt"><input type="radio" name="q3" value="approx"><span data-kk="Шамамен білемін" data-ru="Примерно знаю">Шамамен білемін</span></label><label class="ropt"><input type="radio" name="q3" value="no"><span data-kk="Естіген жоқпын" data-ru="Не слышал">Естіген жоқпын</span></label></div></div>
+          <div class="sq"><div class="sql" data-kk="4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз" data-ru="4. Оцените свой уровень цифровой безопасности">4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз</div><div class="ropts"><label class="ropt"><input type="radio" name="q4" value="high"><span data-kk="Жоғары" data-ru="Высокий">Жоғары</span></label><label class="ropt"><input type="radio" name="q4" value="mid"><span data-kk="Орташа" data-ru="Средний">Орташа</span></label><label class="ropt"><input type="radio" name="q4" value="low"><span data-kk="Төмен" data-ru="Низкий">Төмен</span></label></div></div>
+          <button class="gbtn" style="max-width:180px" onclick="submitS()"><span data-kk="ЖІБЕРУ →" data-ru="ОТПРАВИТЬ →">ЖІБЕРУ →</span></button>
+        </div>
+        <div class="sdone" id="sd"><div class="sdone-ico">✅</div><h3 data-kk="Рахмет!" data-ru="Спасибо!">Рахмет!</h3><p style="color:var(--muted2);margin-top:.4rem;" data-kk="Жауабыңыз қабылданды." data-ru="Ваш ответ принят.">Жауабыңыз қабылданды.</p></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
