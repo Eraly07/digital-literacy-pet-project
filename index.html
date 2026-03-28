@@ -171,36 +171,71 @@
     </section>
 
     <!-- AI -->
-    <section id="ai" class="page">
-      <div class="ph">
-        <div class="ph-tag">// AI SIMULATOR</div>
-        <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
-        <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде алаяқ тактикасын зерттейсің." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции изучай тактику мошенников.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде алаяқ тактикасын зерттейсің.</p>
+<section id="ai" class="page">
+  <div class="ph">
+    <div class="ph-tag">// AI SIMULATOR</div>
+    <h1 class="ph-title">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
+    <p class="ph-desc">Симуляция режимінде алаяқпен сөйлес, қалай қорғану керектігін үйрен.</p>
+  </div>
+
+  <!-- Вкладки выбора режима -->
+  <div class="sim-tabs" style="margin-bottom: 1rem;">
+    <button class="stab on" id="t1" onclick="setSim('adv')">🛡 Кеңесші</button>
+    <button class="stab" id="t2" onclick="setSim('sim')">🎭 Симуляция</button>
+  </div>
+
+  <!-- Блок для режима "Кеңесші" (adv) -->
+  <div id="advPanel" style="display: block;">
+    <div class="sim-wrap">
+      <div class="sim-in">
+        <p class="sim-md" id="smdAdv"></p>
+        <div class="chip-wrap" id="chipsAdv"></div>
+        <textarea class="sim-ta" id="staAdv" placeholder="..."></textarea>
+        <button class="gbtn" id="sbtnAdv" onclick="sendAIAdv()">◉ AI НҰСҚАУЫН АЛУ</button>
       </div>
-      <div class="sim-wrap">
-        <div class="sim-in">
-          <div class="sim-tabs">
-            <button class="stab on" id="t1" onclick="setSim('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
-            <button class="stab" id="t2" onclick="setSim('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
-          </div>
-          <p class="sim-md" id="smd"></p>
-          <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
-          <div class="chip-wrap" id="chips"></div>
-          <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
-          <button class="gbtn" id="sbtn" onclick="sendAI()" style="width:100%">
-            ◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span>
-          </button>
-        </div>
-        <div class="sim-out" id="sout">
-          <div class="sim-empty" id="se">
-            <div class="sim-empty-ico">◉</div>
-            <span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span>
-          </div>
-          <div class="dots-loader" id="sl"><span></span><span></span><span></span></div>
-          <div id="sr" style="display:none"></div>
-        </div>
+      <div class="sim-out">
+        <div class="sim-empty" id="seAdv"><div class="sim-empty-ico">◉</div><span>Жағдай жазып жіберіңіз</span></div>
+        <div class="dots-loader" id="slAdv"><span></span><span></span><span></span></div>
+        <div id="srAdv" style="display:none"></div>
       </div>
-    </section>
+    </div>
+  </div>
+
+  <!-- Блок для режима "Симуляция" (sim) -->
+  <div id="simPanel" style="display: none;">
+    <div class="sim-wrap" style="grid-template-columns: 1fr;">
+      <!-- Выбор сценария -->
+      <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <label style="color: var(--teal); font-size: 0.75rem;">Сценарий:</label>
+        <select id="scenarioSelect" class="sim-ta" style="width: auto; min-width: 160px; background: var(--surface);">
+          <option value="bank">🏦 Банк (қауіпсіздік қызметі)</option>
+          <option value="delivery">📦 Жеткізу қызметі</option>
+          <option value="prize">🎁 Ұтыс ойыны</option>
+          <option value="friend">👤 Досым деп жазып тұр</option>
+        </select>
+        <button class="gbtn-outline" id="resetSimBtn">↺ Жаңа сценарий</button>
+      </div>
+
+      <!-- Область сообщений -->
+      <div id="chatBox" style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; min-height: 300px; max-height: 400px; overflow-y: auto; padding: 1rem; margin-bottom: 1rem;">
+        <div class="sim-empty" id="chatEmpty">
+          <div class="sim-empty-ico">💬</div>
+          <span>Симуляция басталмады. Сценарий таңдап, «Жаңа сценарий» басыңыз.</span>
+        </div>
+        <div id="chatMessages" style="display: none;"></div>
+      </div>
+
+      <!-- Панель ввода -->
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <textarea id="userInput" class="sim-ta" style="flex: 1; min-height: 70px;" placeholder="Жауабыңызды жазыңыз..."></textarea>
+        <button class="gbtn" id="sendSimBtn" disabled>Жіберу</button>
+        <button class="gbtn-outline" id="endSimBtn" disabled>🏁 Симуляцияны аяқтау</button>
+      </div>
+    </div>
+    <!-- Блок для результата анализа -->
+    <div id="feedbackResult" style="margin-top: 1rem; display: none;"></div>
+  </div>
+</section>
 
     <!-- QUIZ -->
     <section id="quiz" class="page">
