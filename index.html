@@ -171,80 +171,62 @@
     </section>
 
     <!-- AI -->
-    <section id="ai" class="page">
-      <div class="ph">
-        <div class="ph-tag">// AI SIMULATOR</div>
-        <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
-        <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде нақты алаяқпен сөйлес." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции общайся с настоящим мошенником.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде нақты алаяқпен сөйлес.</p>
-      </div>
+<section id="ai" class="page">
+  <div class="ph">
+    <div class="ph-tag">// AI SIMULATOR</div>
+    <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
+    <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции тренируй распознавание манипуляций.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың.</p>
+  </div>
 
-      <!-- TABS -->
-      <div class="sim-tabs" style="margin-bottom:1rem;">
-        <button class="stab on" id="t1" onclick="setSim('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
-        <button class="stab" id="t2" onclick="setSim('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
-      </div>
+  <div class="sim-tabs" style="margin-bottom:1rem;">
+    <button class="stab on" id="t1" onclick="setMode('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
+    <button class="stab" id="t2" onclick="setMode('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
+  </div>
 
-      <!-- ADV PANEL -->
-      <div id="advPanel">
-        <div class="sim-wrap">
-          <div class="sim-in">
-            <p class="sim-md" id="smd"></p>
-            <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
-            <div class="chip-wrap" id="chips"></div>
-            <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
-            <button class="gbtn" id="sbtn" onclick="sendAI()" style="width:100%">
-              ◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span>
-            </button>
-          </div>
-          <div class="sim-out" id="sout">
-            <div class="sim-empty" id="se">
-              <div class="sim-empty-ico">◉</div>
-              <span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span>
-            </div>
-            <div class="dots-loader" id="sl">
-              <div class="dots-text" id="slt">AI...</div>
-              <div class="dots-row"><span></span><span></span><span></span></div>
-            </div>
-            <div id="sr" style="display:none"></div>
-          </div>
+  <!-- ADV PANEL -->
+  <div id="advPanel">
+    <div class="sim-wrap">
+      <div class="sim-in">
+        <p class="sim-md" id="smd"></p>
+        <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
+        <div class="chip-wrap" id="chips"></div>
+        <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
+        <button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">
+          ◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span>
+        </button>
+      </div>
+      <div class="sim-out" id="sout">
+        <div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span></div>
+        <div class="dots-loader" id="sl"><div class="dots-text" id="slt">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
+        <div id="sr" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIM PANEL -->
+  <div id="simPanel" style="display:none;">
+    <div class="sim-sel">
+      <div class="sim-sel-label" data-kk="Сценарий" data-ru="Сценарий">Сценарий</div>
+      <select id="simScenario" class="sim-select"></select>
+    </div>
+    <div class="sim-chat-wrap">
+      <div class="sim-chat-box" id="simChatBox">
+        <div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span data-kk="Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз" data-ru="Для начала симуляции нажмите 'СТАРТ'">Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div>
+        <div id="simMessages" style="display:none;"></div>
+        <div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="sim-chat-input">
+        <textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+          <button class="gbtn" id="simSendBtn" disabled>◉ <span data-kk="ЖІБЕРУ" data-ru="ОТПРАВИТЬ">ЖІБЕРУ</span></button>
+          <button class="gbtn-outline" id="simStartBtn">▶ <span data-kk="БАСТАУ" data-ru="СТАРТ">БАСТАУ</span></button>
+          <button class="gbtn-outline" id="simEndBtn" disabled>■ <span data-kk="АЯҚТАУ" data-ru="ЗАВЕРШИТЬ">АЯҚТАУ</span></button>
         </div>
       </div>
-
-      <!-- SIM PANEL (чат) -->
-      <div id="simPanel" style="display:none;">
-        <div class="sim-chat-wrap">
-          <!-- Чат хабарламалары -->
-          <div class="sim-chat-box" id="simChatBox">
-            <div class="sim-empty" id="simEmpty" style="display:flex;">
-              <div class="sim-empty-ico">🎭</div>
-              <span data-kk="Симуляцияны бастау үшін төмендегі батырманы басыңыз" data-ru="Нажмите кнопку ниже чтобы начать симуляцию">Симуляцияны бастау үшін төмендегі батырманы басыңыз</span>
-            </div>
-            <div id="simMessages" style="display:none;"></div>
-            <div class="dots-loader" id="simLoader" style="display:none;">
-              <div class="dots-text" id="simLoaderText" data-kk="Скамер жазып жатыр..." data-ru="Мошенник печатает...">Скамер жазып жатыр...</div>
-              <div class="dots-row"><span></span><span></span><span></span></div>
-            </div>
-          </div>
-          <!-- Input -->
-          <div class="sim-chat-input">
-            <textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea>
-            <div style="display:flex;gap:.5rem;margin-top:.5rem;">
-              <button class="gbtn" id="simSendBtn" onclick="simSend()" style="flex:1;">
-                ◉ <span data-kk="ЖІБЕРУ" data-ru="ОТПРАВИТЬ">ЖІБЕРУ</span>
-              </button>
-              <button class="gbtn-outline" id="simStartBtn" onclick="simStart()" style="flex:1;">
-                ▶ <span data-kk="БАСТАУ" data-ru="НАЧАТЬ">БАСТАУ</span>
-              </button>
-              <button class="gbtn-outline" id="simEndBtn" onclick="simEnd()" style="flex:1;" disabled>
-                ■ <span data-kk="АЯҚТАУ" data-ru="ЗАВЕРШИТЬ">АЯҚТАУ</span>
-              </button>
-            </div>
-          </div>
-          <!-- Нәтиже -->
-          <div id="simResult" style="display:none;margin-top:1rem;"></div>
-        </div>
-      </div>
-    </section>
+      <div id="simResult" style="display:none;margin-top:1rem;"></div>
+    </div>
+  </div>
+</section>
 
     <!-- QUIZ -->
     <section id="quiz" class="page">
