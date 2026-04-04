@@ -161,7 +161,7 @@ function renderLB(){
     </div>`).join('');
 }
 
-// QUIZ (keep your existing 10 questions)
+// ========== QUIZ (10 сұрақ) ==========
 const QS=[
   {kk:{q:"Қауіпсіз пароль деп нені айтамыз?",o:["Туған жылыңыз","12+ символды күрделі пароль","Атыңыз бен фамилияңыз","4 цифрлық сан"],e:"12+ символ, үлкен-кіші әріп, сан және арнайы белгілер — қауіпсіз пароль."},ru:{q:"Что называется надёжным паролем?",o:["Год рождения","Сложный пароль 12+ символов","Имя и фамилия","4-значное число"],e:"12+ символов, разные регистры, цифры и спецсимволы — надёжный пароль."},a:1},
   {kk:{q:"Фишинг дегеніміз не?",o:["Балық аулау түрі","Жеке деректерді ұрлауға жалған хаттар","Интернет жылдамдығын өлшеу","Бағдарламалау тілі"],e:"Фишинг — сенімді ұйымды бейнелеп деректерді ұрлауға тырысу."},ru:{q:"Что такое фишинг?",o:["Вид рыбалки","Рассылка фейковых писем для кражи данных","Измерение скорости","Язык программирования"],e:"Фишинг — имитация надёжных организаций для кражи данных."},a:1},
@@ -309,7 +309,7 @@ async function sendAIAdv(){
 
 function renderAdv(p,raw){
   let h='';
-  if(p){
+  if(p && p.risk){
     const rm={HIGH:'rH',MEDIUM:'rM',LOW:'rL'};
     h+=`<div class="ai-blk"><div class="ai-lbl">◉ ${lang==='kk'?'AI ТАЛДАУЫ':'AI АНАЛИЗ'}</div><span class="rpill ${rm[p.risk]||'rM'}">▲ ${p.risk_label||p.risk}</span><p>${p.what||''}</p></div>`;
     if(p.steps?.length) h+=`<div class="ai-blk"><div class="ai-lbl">◆ ${lang==='kk'?'НЕ ІСТЕУ КЕРЕК':'ЧТО ДЕЛАТЬ'}</div>${p.steps.map((s,i)=>`<p>▸ <b>${i+1}.</b> ${s}</p>`).join('')}</div>`;
@@ -401,7 +401,11 @@ async function simStart(){
       body:JSON.stringify({ mode:'sim', messages:[], text:'start', scenario:simCurrentScenario })
     });
     const data = await res.json();
-    const firstMsg = data?.content || (lang==='kk'?'Сәлем! Бір минут уақытыңыз бар ма?':'Здравствуйте! У вас есть минута?');
+    let firstMsg = data?.content || (lang==='kk'?'Сәлем! Бір минут уақытыңыз бар ма?':'Здравствуйте! У вас есть минута?');
+    // фильтр
+    if(firstMsg.toLowerCase().includes('cannot') || firstMsg.toLowerCase().includes('sorry') || firstMsg.toLowerCase().includes('ai')){
+      firstMsg = lang==='kk'?'Сіздің шотыңызда күдікті операция анықталды. Кодты растаңыз.':'На вашем счете обнаружена подозрительная операция. Подтвердите код.';
+    }
     simChatHistory.push({role:'assistant', content:firstMsg});
     _simRenderChat();
   }catch(e){
@@ -431,7 +435,10 @@ async function simSend(){
       body:JSON.stringify({ mode:'sim', messages:messagesToSend, scenario:simCurrentScenario })
     });
     const data = await res.json();
-    const reply = data?.content || (lang==='kk'?'...':'...');
+    let reply = data?.content || (lang==='kk'?'...':'...');
+    if(reply.toLowerCase().includes('cannot') || reply.toLowerCase().includes('sorry') || reply.toLowerCase().includes('ai')){
+      reply = lang==='kk'?'Қауіпсіздік мақсатында ақпаратыңызды тексеру керек. Кодты жіберіңіз.':'В целях безопасности необходимо проверить ваши данные. Отправьте код.';
+    }
     simChatHistory.push({role:'assistant', content:reply});
     _simRenderChat();
   }catch(e){
