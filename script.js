@@ -35,6 +35,28 @@ function toAnalyzeEndpoint(ai){
   return s.replace(/\/+$/,'') + '/api/analyze';
 }
 
+
+// ═══════════════════════════════
+// FETCH WITH RETRY
+// ═══════════════════════════════
+async function fetchWithRetry(url, options, retries=3){
+  for(let i=0; i<retries; i++){
+    try{
+      const res = await fetch(url, options);
+      if(res.ok) return res;
+      // 502/503 болса қайталаймыз
+      if((res.status===502||res.status===503) && i<retries-1){
+        await new Promise(r=>setTimeout(r,1500));
+        continue;
+      }
+      return res;
+    }catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r,1500));
+    }
+  }
+}
+
 // ═══════════════════════════════
 // PARTICLES
 // ═══════════════════════════════
@@ -334,13 +356,13 @@ async function analyzeSim(event,lastUser){
   const headers={'Content-Type':'application/json'};
   if(/ngrok/i.test(AI_ANALYZE_ENDPOINT)) headers['ngrok-skip-browser-warning']='true';
   try{
-    const res=await fetch(AI_ANALYZE_ENDPOINT,{
+    const res=await fetchWithRetry(AI_ANALYZE_ENDPOINT,{
       method:'POST',
       headers,
       body:JSON.stringify({
         event,
         lang,
-        history:simHistory.slice(-12),
+        history:simHistory.slice(-8),
         last_user:lastUser||''
       })
     });
@@ -364,10 +386,14 @@ async function sendAI(){
   document.getElementById('se').style.display='none';
   document.getElementById('sr').style.display='none';
   document.getElementById('sl').style.display='flex';
+  const slt=document.getElementById('slt');
+  if(slt) slt.textContent = sm==='sim'
+    ?(lang==='kk'?'Скамер жазып жатыр...':'Мошенник печатает...')
+    :(lang==='kk'?'AI жазады...':'AI пишет...');
   document.getElementById('sbtn').disabled=true;
   const SYS=sm==='adv'
-    ?`You are a digital security expert. Respond in the SAME language as the user. Output ONLY valid JSON, no markdown, no code fences. Schema: {"risk":"HIGH|MEDIUM|LOW","risk_label":"local risk name","what":"2-3 sentences","steps":["s1","s2","s3"],"prevention":"tip"}`
-    :`You are a cybersecurity educator. Respond in the SAME language as the user. Output ONLY valid JSON, no markdown, no code fences. Do NOT generate scam messages, scripts, links, phone numbers, or step-by-step wrongdoing instructions. Keep tactics high-level and educational. Schema: {"tactics":["t1","t2","t3"],"warning_signs":["w1","w2"],"defense":["d1","d2","d3"]}`;
+    ?`You are a digital security expert. Respond in the SAME language as the user. Output ONLY valid JSON, no markdown, no code fences. Keep it brief. Schema: {"risk":"HIGH|MEDIUM|LOW","risk_label":"local risk name","what":"2-3 sentences","steps":["s1","s2","s3"],"prevention":"tip"}`
+    :`You are a cybersecurity educator. Respond in the SAME language as the user. Output ONLY valid JSON, no markdown, no code fences. Do NOT generate scam messages, scripts, links, phone numbers, or step-by-step wrongdoing instructions. Keep each item 1 short sentence. Schema: {"tactics":["t1","t2","t3"],"warning_signs":["w1","w2"],"defense":["d1","d2","d3"]}`;
   try{
     const headers={'Content-Type':'application/json'};
     if(/ngrok/i.test(AI_API_ENDPOINT)) headers['ngrok-skip-browser-warning']='true';
@@ -401,7 +427,7 @@ async function sendAI(){
         }
       }
     }
-    const res=await fetch(AI_API_ENDPOINT,{
+    const res=await fetchWithRetry(AI_API_ENDPOINT,{
       method:'POST',
       headers,
       body:JSON.stringify({
@@ -416,14 +442,10 @@ async function sendAI(){
     try{data=JSON.parse(rawBody);}catch{data=null;}
     if(!res.ok || !data || data.error){
       const msg=(data?.error||data?.message||(!rawBody?`HTTP ${res.status}`:rawBody.slice(0,240))).toString();
-      const tip=msg.includes('OPENROUTER_API_KEY')
-        ?(lang==='kk'
-          ?'Backend конфигі жоқ: серверде OPENROUTER_API_KEY қою керек.'
-          :'Нет конфига backend: на сервере нужно задать OPENROUTER_API_KEY.')
-        :(lang==='kk'
-          ?'Ескерту: free модельде лимит/кезек болуы мүмкін.'
-          :'Примечание: у free модели бывают лимиты/очередь.');
-      document.getElementById('sr').innerHTML=`<div class="ai-blk"><div class="ai-lbl">⚠ ${lang==='kk'?'ҚАТЕ':'ОШИБКА'}</div><p style="color:var(--danger)">${msg}</p><p style="color:var(--muted);margin-top:.45rem;font-size:.8rem;">${tip}</p><p style="color:var(--muted);margin-top:.25rem;font-size:.75rem;">endpoint: ${AI_API_ENDPOINT}</p></div>`;
+      const tip = lang==='kk'
+        ? 'Сервер бос емес, бірнеше секундтан кейін қайталап көріңіз.'
+        : 'Сервер занят, попробуйте через несколько секунд.';
+      document.getElementById('sr').innerHTML=`<div class="ai-blk"><div class="ai-lbl">⚠ ${lang==='kk'?'БАЙЛАНЫС ҚАТЕСІ':'ОШИБКА СВЯЗИ'}</div><p style="color:var(--warn)">${tip}</p></div>`;
       document.getElementById('sr').style.display='block';
     }else{
       const raw=(data.content||'{}').toString();
