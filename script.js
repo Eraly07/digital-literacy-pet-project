@@ -310,6 +310,10 @@ function setSim(m){
   sm=m;
   document.getElementById('t1').className='stab'+(m==='adv'?' on':'');
   document.getElementById('t2').className='stab'+(m==='sim'?' on':'');
+  const adv=document.getElementById('advPanel');
+  const sim=document.getElementById('simPanel');
+  if(adv) adv.style.display = m==='adv'?'block':'none';
+  if(sim) sim.style.display = m==='sim'?'block':'none';
   _updateSimActions();
   updateChips();
 }
@@ -512,6 +516,178 @@ function renderSimSummary(p,raw){
   if(!h) h=`<div class="ai-blk"><div class="ai-lbl">◉ AI</div><p>${raw.substring(0,500)}</p></div>`;
   document.getElementById('sr').innerHTML=h;
   document.getElementById('sr').style.display='block';
+}
+
+
+// ═══════════════════════════════
+// SIM CHAT — Скамер чаты
+// ═══════════════════════════════
+let simChatHistory = [];
+let simChatActive = false;
+
+const SCAM_SCENARIOS = {
+  kk: [
+    { id:'bank', label:'Банк қауіпсіздігі', prompt:'Сіз — алаяқ. Банктің қауіпсіздік қызметкері болып көрінесіз. Қазақша жаз. Қысқа 1-2 сөйлем. Мақсат: SMS-код алу.' },
+    { id:'prize', label:'Жүлде ұтты', prompt:'Сіз — алаяқ. Ұтыс ойынының ұйымдастырушысы болып көрінесіз. Қазақша жаз. Қысқа 1-2 сөйлем. Мақсат: ақша немесе деректер алу.' },
+    { id:'delivery', label:'Жеткізу қызметі', prompt:'Сіз — алаяқ. Жеткізу қызметінің операторы болып көрінесіз. Қазақша жаз. Қысқа 1-2 сөйлем. Мақсат: төлем алу.' },
+  ],
+  ru: [
+    { id:'bank', label:'Служба безопасности банка', prompt:'Ты — мошенник. Притворяешься сотрудником безопасности банка. Пиши по-русски. 1-2 коротких предложения. Цель: получить SMS-код.' },
+    { id:'prize', label:'Выиграл приз', prompt:'Ты — мошенник. Притворяешься организатором розыгрыша. Пиши по-русски. 1-2 коротких предложения. Цель: получить деньги или данные.' },
+    { id:'delivery', label:'Служба доставки', prompt:'Ты — мошенник. Притворяешься оператором доставки. Пиши по-русски. 1-2 коротких предложения. Цель: получить оплату.' },
+  ]
+};
+
+function _escHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function _simRenderChat(){
+  const msgs = document.getElementById('simMessages');
+  const empty = document.getElementById('simEmpty');
+  if(!msgs) return;
+  if(!simChatHistory.length){ msgs.style.display='none'; if(empty) empty.style.display='flex'; return; }
+  if(empty) empty.style.display='none';
+  msgs.style.display='block';
+  msgs.innerHTML = simChatHistory.map(m=>`
+    <div class="sim-msg ${m.role==='assistant'?'scam':'user'}">
+      <div class="sim-msg-label">${m.role==='assistant'?(lang==='kk'?'⚠ СКАМЕР':'⚠ МОШЕННИК'):(lang==='kk'?'СІЗ':'ВЫ')}</div>
+      <div class="sim-msg-bubble">${_escHtml(m.content)}</div>
+    </div>`).join('');
+  const box = document.getElementById('simChatBox');
+  if(box) box.scrollTop = box.scrollHeight;
+}
+
+function _simSetLoader(show){
+  const el = document.getElementById('simLoader');
+  if(el) el.style.display = show ? 'flex' : 'none';
+}
+
+function _simSetBtns(sending){
+  const send = document.getElementById('simSendBtn');
+  const end = document.getElementById('simEndBtn');
+  const start = document.getElementById('simStartBtn');
+  if(send) send.disabled = sending || !simChatActive;
+  if(end) end.disabled = sending || !simChatActive || simChatHistory.length===0;
+  if(start) start.disabled = sending;
+}
+
+async function simStart(){
+  const scenarios = SCAM_SCENARIOS[lang] || SCAM_SCENARIOS.kk;
+  const scenario = scenarios[Math.floor(Math.random()*scenarios.length)];
+  simChatHistory = [];
+  simChatActive = true;
+  _simRenderChat();
+  _simSetLoader(true);
+  _simSetBtns(true);
+  document.getElementById('simResult').style.display='none';
+
+  const sysPrompt = scenario.prompt + ' Алаяқ ретінде бірінші хабарды жіберіңіз. Ешқашан AI екеніңізді айтпаңыз.';
+  const messages = [
+    {role:'system', content: sysPrompt},
+    {role:'user', content:'Start. Send your first message as a scammer.'}
+  ];
+
+  try{
+    const res = await fetchWithRetry(AI_API_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:'sim', messages, text:'start'})
+    });
+    const data = await res.json().catch(()=>null);
+    const reply = data?.content || (lang==='kk'?'Сәлеметсіз бе...':'Здравствуйте...');
+    simChatHistory.push({role:'assistant', content:reply});
+    _simRenderChat();
+  }catch(e){
+    simChatHistory.push({role:'assistant', content: lang==='kk'?'Байланыс қатесі. Қайта басыңыз.':'Ошибка связи. Нажмите ещё раз.'});
+    _simRenderChat();
+  }finally{
+    _simSetLoader(false);
+    _simSetBtns(false);
+  }
+}
+
+async function simSend(){
+  if(!simChatActive) return;
+  const input = document.getElementById('simInput');
+  const txt = (input?.value||'').trim();
+  if(!txt) return;
+  input.value='';
+  simChatHistory.push({role:'user', content:txt});
+  _simRenderChat();
+  _simSetLoader(true);
+  _simSetBtns(true);
+
+  const scenarios = SCAM_SCENARIOS[lang] || SCAM_SCENARIOS.kk;
+  const sysPrompt = scenarios[0].prompt + ' Ешқашан AI екеніңізді айтпаңыз. Рөлден шықпаңыз.';
+  const messages = [
+    {role:'system', content: sysPrompt},
+    ...simChatHistory.slice(-8)
+  ];
+
+  try{
+    const res = await fetchWithRetry(AI_API_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:'sim', messages, text:txt})
+    });
+    const data = await res.json().catch(()=>null);
+    const reply = data?.content || (lang==='kk'?'...':'...');
+    simChatHistory.push({role:'assistant', content:reply});
+    _simRenderChat();
+  }catch(e){
+    simChatHistory.push({role:'assistant', content: lang==='kk'?'Байланыс үзілді...':'Связь прервалась...'});
+    _simRenderChat();
+  }finally{
+    _simSetLoader(false);
+    _simSetBtns(false);
+  }
+}
+
+async function simEnd(){
+  if(!simChatActive || simChatHistory.length===0) return;
+  simChatActive = false;
+  _simSetBtns(true);
+  _simSetLoader(true);
+
+  try{
+    const res = await fetchWithRetry(AI_ANALYZE_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({event:'end', lang, history:simChatHistory.slice(-8), last_user:''})
+    });
+    const raw = await res.text();
+    let d = null;
+    try{ d=JSON.parse(raw); }catch{}
+    const content = d?.content || raw;
+    let p = null;
+    try{
+      const c = (content||'').replace(/```(?:json)?|```/g,'').trim();
+      const s=c.indexOf('{'),e=c.lastIndexOf('}');
+      if(s!==-1&&e>s) p=JSON.parse(c.slice(s,e+1));
+    }catch{}
+    _renderSimEnd(p, content);
+  }catch(e){
+    document.getElementById('simResult').innerHTML=`<div class="ai-blk"><p style="color:var(--danger)">⚠ ${lang==='kk'?'Талдау қатесі':'Ошибка анализа'}</p></div>`;
+    document.getElementById('simResult').style.display='block';
+  }finally{
+    _simSetLoader(false);
+  }
+}
+
+function _renderSimEnd(p, raw){
+  const el = document.getElementById('simResult');
+  let h='';
+  if(p && (p.summary||p.good_moves||p.mistakes||p.advice)){
+    if(p.summary) h+=`<div class="ai-blk"><div class="ai-lbl">◎ ${lang==='kk'?'ҚОРЫТЫНДЫ':'ИТОГ'}</div><p>${_escHtml(p.summary)}</p></div>`;
+    if(p.good_moves?.length) h+=`<div class="ai-blk"><div class="ai-lbl">✅ ${lang==='kk'?'ДҰРЫС ҚАДАМДАР':'ПРАВИЛЬНЫЕ ШАГИ'}</div>${p.good_moves.map(s=>`<p>▸ ${_escHtml(s)}</p>`).join('')}</div>`;
+    if(p.mistakes?.length) h+=`<div class="ai-blk"><div class="ai-lbl">⚠ ${lang==='kk'?'ҚАТЕЛЕР':'ОШИБКИ'}</div>${p.mistakes.map(s=>`<p>▸ ${_escHtml(s)}</p>`).join('')}</div>`;
+    if(p.advice?.length) h+=`<div class="ai-blk"><div class="ai-lbl">◈ ${lang==='kk'?'КЕҢЕСТЕР':'СОВЕТЫ'}</div>${p.advice.map(s=>`<p>▸ ${_escHtml(s)}</p>`).join('')}</div>`;
+    if(typeof p.score==='number') h+=`<div class="ai-blk"><div class="ai-lbl">★ SCORE</div><p style="font-size:1.4rem;font-weight:700;color:var(--teal)">${Math.max(0,Math.min(100,Math.round(p.score)))}/100</p></div>`;
+  } else {
+    h=`<div class="ai-blk"><div class="ai-lbl">◎ ${lang==='kk'?'НӘТИЖЕ':'РЕЗУЛЬТАТ'}</div><p>${_escHtml(typeof raw==='string'?raw.slice(0,500):JSON.stringify(raw))}</p></div>`;
+  }
+  h+=`<div style="margin-top:.75rem;"><button class="gbtn-outline" onclick="simStart()" style="width:100%;">↺ ${lang==='kk'?'ҚАЙТА БАСТАУ':'НАЧАТЬ ЗАНОВО'}</button></div>`;
+  el.innerHTML=h;
+  el.style.display='block';
 }
 
 // ═══════════════════════════════
