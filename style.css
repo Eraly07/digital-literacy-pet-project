@@ -200,6 +200,35 @@ nav::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(0,240,200,0.
 }
 .main.sidebar-small{margin-left:52px;}
 @media(max-width:800px){.main{margin-left:0;padding-top:52px;}}
+@media(max-width:800px){
+  .page{padding:1.2rem 1rem;}
+  .ph-title{font-size:clamp(1.15rem,5vw,1.6rem);}
+  .ph-desc{font-size:0.85rem;}
+  .home-title{font-size:clamp(1.8rem,8vw,2.6rem);}
+  .home-desc{font-size:0.95rem;}
+  .home-grid{grid-template-columns:1fr;max-width:100%;}
+  .grid-2{grid-template-columns:1fr;}
+  .grid-3{grid-template-columns:1fr;}
+  .ncard,.hcard{padding:1.1rem;}
+  .sim-in,.sim-out{padding:1rem;}
+  .sim-ta{min-height:110px;}
+  .ai-blk{padding:0.75rem;}
+  .qwrap{padding:1.2rem;}
+  .lbtable{font-size:0.85rem;}
+}
+@media(max-width:480px){
+  .topbar{height:46px;padding:0 0.5rem;}
+  .topbar .nav-item{padding:0.3rem 0.45rem;font-size:0.68rem;}
+  .ph-tag{letter-spacing:2px;}
+  .home-badge{font-size:0.65rem;}
+  .home-grid{gap:0.7rem;}
+  .sim-tabs{gap:0.3rem;flex-wrap:wrap;}
+  .stab{flex:1;}
+  .chip{font-size:0.78rem;padding:0.45rem 0.6rem;}
+  .gbtn{padding:0.65rem 1rem;font-size:0.82rem;}
+  .gbtn-outline{padding:0.55rem 0.9rem;font-size:0.8rem;}
+  .qwrap{padding:1rem;}
+}
 
 /* ── PAGES ── */
 .page{
@@ -415,7 +444,9 @@ nav::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(0,240,200,0.
 }
 .sim-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.6rem;color:var(--muted);font-size:0.85rem;}
 .sim-empty-ico{font-size:2.5rem;opacity:0.25;filter:grayscale(1);}
-.dots-loader{display:none;justify-content:center;align-items:center;gap:6px;padding:2rem;}
+.dots-loader{display:none;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:2rem;}
+.dots-row{display:flex;gap:6px;}
+.dots-text{font-size:0.8rem;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;}
 .dots-loader span{
   width:8px;height:8px;border-radius:50%;background:var(--teal);
   box-shadow:0 0 8px var(--teal);animation:dl 0.8s infinite;
@@ -601,3 +632,23 @@ body::after{
   content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
   background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
 }
+
+/* ── SIM CHAT ── */
+.sim-chat-wrap{display:flex;flex-direction:column;gap:.75rem;max-width:700px;margin:0 auto;}
+.sim-chat-box{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  min-height:380px;max-height:480px;overflow-y:auto;padding:1rem;
+  display:flex;flex-direction:column;gap:.75rem;
+}
+.sim-msg{display:flex;flex-direction:column;max-width:80%;}
+.sim-msg.scam{align-self:flex-start;}
+.sim-msg.user{align-self:flex-end;}
+.sim-msg-label{font-size:.65rem;font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:.25rem;color:var(--muted);}
+.sim-msg.scam .sim-msg-label{color:var(--danger);}
+.sim-msg.user .sim-msg-label{color:var(--teal);text-align:right;}
+.sim-msg-bubble{
+  padding:.6rem .9rem;border-radius:10px;font-size:.9rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;
+}
+.sim-msg.scam .sim-msg-bubble{background:rgba(255,64,96,0.1);border:1px solid rgba(255,64,96,0.2);}
+.sim-msg.user .sim-msg-bubble{background:rgba(0,240,200,0.08);border:1px solid rgba(0,240,200,0.18);}
+.sim-chat-input{display:flex;flex-direction:column;}
