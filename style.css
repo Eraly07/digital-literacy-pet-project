@@ -652,3 +652,24 @@ body::after{
 .sim-msg.scam .sim-msg-bubble{background:rgba(255,64,96,0.1);border:1px solid rgba(255,64,96,0.2);}
 .sim-msg.user .sim-msg-bubble{background:rgba(0,240,200,0.08);border:1px solid rgba(0,240,200,0.18);}
 .sim-chat-input{display:flex;flex-direction:column;}
+
+/* Қосымша стильдер (симуляция сценарий таңдау және нәтиже үшін) */
+.sim-sel{
+  display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem;
+  max-width:980px;
+}
+.sim-sel-label{
+  font-size:.72rem; font-family:'JetBrains Mono',monospace;
+  letter-spacing:1.5px; color:var(--muted); text-transform:uppercase;
+}
+.sim-select{
+  background:var(--surface); border:1px solid var(--border);
+  color:var(--text); border-radius:8px; padding:.45rem .7rem;
+  font-size:.85rem; min-width:220px; outline:none;
+}
+.sim-select:focus{ border-color:var(--teal); box-shadow:0 0 0 3px rgba(0,240,200,0.08); }
+.sim-pre{
+  white-space:pre-wrap; word-break:break-word;
+  font-family:'JetBrains Mono',monospace; font-size:0.82rem;
+  color:var(--text); line-height:1.6;
+}
