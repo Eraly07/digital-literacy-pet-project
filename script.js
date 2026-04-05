@@ -7,6 +7,7 @@ const AI_API_ENDPOINT = normalizeAiEndpoint(
   '/api/ai'
 );
 const AI_ANALYZE_ENDPOINT = toAnalyzeEndpoint(AI_API_ENDPOINT);
+const AI_SCORES_ENDPOINT = AI_API_ENDPOINT.replace(/\/api\/ai\/?$/i, '/api/scores');
 
 function normalizeAiEndpoint(v){
   const s=(v??'').toString().trim();
@@ -145,20 +146,45 @@ function saveName(){
   if(!v) return;
   pName=v; document.getElementById('nm').classList.remove('on');
 }
-function addBoard(n,s){
+function addBoard(n,s,type='quiz'){
   const d=new Date(), ds=`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}`;
-  board=board.filter(r=>r.name!==n); board.push({name:n,s,d:ds});
+  board=board.filter(r=>r.name!==n||r.type!==type);
+  board.push({name:n,s,d:ds,type});
+  fetch(AI_SCORES_ENDPOINT,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:n,score:s,type})
+  }).catch(()=>{});
 }
-function renderLB(){
+async function renderLB(){
+  const el=document.getElementById('lbb');
+  if(el) el.innerHTML=`<div style="color:var(--muted);font-size:.8rem;padding:.5rem">${lang==='kk'?'Жүктелуде...':'Загрузка...'}</div>`;
+  try{
+    const res=await fetch(AI_SCORES_ENDPOINT).catch(()=>null);
+    if(res && res.ok){
+      const data=await res.json().catch(()=>null);
+      if(data && data.scores && data.scores.length>0){
+        const M=['🥇','🥈','🥉'],C=['g','s','b'];
+        // localStorage-дегілерді де қосамыз
+        const all=[...data.scores,...board.filter(b=>!data.scores.find(s=>s.name===b.name))];
+        all.sort((a,b2)=>b2.s-a.s);
+        el.innerHTML=all.slice(0,20).map((r,i)=>`
+          <div class="lbrow">
+            <div class="lbrank ${C[i]||''}">${M[i]||i+1}</div>
+            <div class="lbname">${r.name}</div>
+            <div class="lbsc">${r.s}/10</div>
+            <div class="lbdt">${r.d}</div>
+          </div>`).join('');
+        return;
+      }
+    }
+  }catch{}
+  // fallback — localStorage
   const sorted=[...board].sort((a,b)=>b.s-a.s);
   const M=['🥇','🥈','🥉'],C=['g','s','b'];
-  document.getElementById('lbb').innerHTML=sorted.map((r,i)=>`
-    <div class="lbrow">
-      <div class="lbrank ${C[i]||''}">${M[i]||i+1}</div>
-      <div class="lbname">${r.name}</div>
-      <div class="lbsc">${r.s}/10</div>
-      <div class="lbdt">${r.d}</div>
-    </div>`).join('');
+  el.innerHTML=sorted.length
+    ? sorted.map((r,i)=>`<div class="lbrow"><div class="lbrank ${C[i]||''}">${M[i]||i+1}</div><div class="lbname">${r.name}</div><div class="lbsc">${r.s}/10</div><div class="lbdt">${r.d}</div></div>`).join('')
+    : `<div style="color:var(--muted);font-size:.8rem;padding:.5rem">${lang==='kk'?'Әлі нәтиже жоқ':'Результатов пока нет'}</div>`;
 }
 
 // ========== QUIZ (10 сұрақ) ==========
