@@ -462,9 +462,11 @@ async function simEnd(){
       body:JSON.stringify({ event:'end', lang, history:simChatHistory.slice(-8), last_user:'', scenario:simCurrentScenario })
     });
     const data = await res.json();
-    const content = data?.content || (lang==='kk'?'Талдау дайын.':'Анализ готов.');
+    let content = data?.content || (lang==='kk'?'Талдау дайын.':'Анализ готов.');
+    // Қысқарту (максимум 600 символ)
+    if(content.length > 600) content = content.slice(0,600) + '...';
     document.getElementById('simResult').innerHTML = `
-      <div class="ai-blk"><div class="ai-lbl">◎ ${lang==='kk'?'ТАЛДАУ':'АНАЛИЗ'}</div><pre class="sim-pre">${_escHtml(content.slice(0,2500))}</pre></div>
+      <div class="ai-blk"><div class="ai-lbl">📊 ${lang==='kk'?'ТАЛДАУ':'АНАЛИЗ'}</div><div class="sim-pre">${_escHtml(content)}</div></div>
       <div style="margin-top:.75rem;"><button class="gbtn-outline" onclick="simStart()" style="width:100%;">↺ ${lang==='kk'?'ҚАЙТА БАСТАУ':'НАЧАТЬ ЗАНОВО'}</button></div>`;
     document.getElementById('simResult').style.display='block';
   }catch(e){
@@ -474,7 +476,6 @@ async function simEnd(){
     _simSetLoader(false);
   }
 }
-
 // SURVEY
 function submitS(){
   if(!['q1','q2','q3','q4'].every(n=>document.querySelector(`input[name="${n}"]:checked`))){
