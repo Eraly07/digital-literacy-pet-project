@@ -673,3 +673,15 @@ body::after{
   font-family:'JetBrains Mono',monospace; font-size:0.82rem;
   color:var(--text); line-height:1.6;
 }
+
+.sim-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  background: rgba(0, 240, 200, 0.05);
+  padding: 1rem;
+  border-radius: 10px;
+  margin-top: 0.5rem;
+}
