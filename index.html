@@ -18,7 +18,7 @@
 <div class="mbg" id="nm">
   <div class="mbox">
     <h3>[ NAME ]</h3>
-    <p data-kk="Тест нәтижесі рейтингке қосылады" data-ru="Результат будет добавлен в рейтинг">Тест нәтижесі рейтингке қосылады</p>
+  <p data-kk="Курс нәтижесі рейтингке қосылады" data-ru="Результат курса будет добавлен в рейтинг">Курс нәтижесі рейтингке қосылады</p>
     <input class="minput" id="ni" placeholder="атынызды жазыңыз..." maxlength="24">
     <button class="gbtn" style="width:100%" onclick="saveName()">
       <span data-kk="КІРУ →" data-ru="ВОЙТИ →">КІРУ →</span>
@@ -121,7 +121,7 @@
           <div class="hcard" onclick="go('quiz')">
             <span class="hcard-icon">◎</span>
             <div class="hcard-title" data-kk="ТЕСТ" data-ru="ТЕСТ">ТЕСТ</div>
-            <div class="hcard-desc" data-kk="10 сұрақ + сертификат" data-ru="10 вопросов + сертификат">10 сұрақ + сертификат</div>
+            <div class="hcard-desc" data-kk="Курс тесттері + сертификат" data-ru="Тесты курса + сертификат">Курс тесттері + сертификат</div>
           </div>
           <div class="hcard" onclick="go('tips')">
             <span class="hcard-icon">◆</span>
@@ -228,17 +228,14 @@
   </div>
 </section>
 
-    <!-- QUIZ -->
+    <!-- COURSE VIEW -->
     <section id="quiz" class="page">
       <div class="ph">
-        <div class="ph-tag">// <span data-kk="ӨЗІҢДІ ТЕКСЕР" data-ru="ПРОВЕРЬ СЕБЯ">ӨЗІҢДІ ТЕКСЕР</span></div>
-        <h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>тесті</span>" data-ru="Тест по <span class='acc'>цифровой грамотности</span>">Цифрлық сауаттылық <span class="acc">тесті</span></h1>
-        <p class="ph-desc" data-kk="10 сұрақ. 60%+ болса сертификат жүктеуге болады." data-ru="10 вопросов. При 60%+ можно скачать сертификат.">10 сұрақ. 60%+ болса сертификат жүктеуге болады.</p>
+        <div class="ph-tag">// <span data-kk="КУРС БЕТІ" data-ru="СТРАНИЦА КУРСА">КУРС БЕТІ</span></div>
+        <h1 class="ph-title" data-kk="Оқу <span class='acc'>бағдарламасы</span>" data-ru="<span class='acc'>Программа</span> обучения">Оқу <span class="acc">бағдарламасы</span></h1>
+        <p class="ph-desc" data-kk="Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат." data-ru="Модули, мини‑тесты и итоговый тест. После завершения — рейтинг и сертификат.">Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат.</p>
       </div>
-      <div class="qwrap">
-        <div class="qprog-bg"><div class="qprog-fill" id="qp" style="width:0%"></div></div>
-        <div id="qb"></div>
-      </div>
+      <div id="courseView"></div>
     </section>
 
     <!-- LEADERBOARD -->
@@ -259,14 +256,10 @@
     <section id="courses" class="page">
       <div class="ph">
         <div class="ph-tag">// <span data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</span></div>
-        <h1 class="ph-title" data-kk="Тегін оқу <span class='acc'>ресурстары</span>" data-ru="Бесплатные учебные <span class='acc'>ресурсы</span>">Тегін оқу <span class="acc">ресурстары</span></h1>
+        <h1 class="ph-title" data-kk="7 негізгі <span class='acc'>курс</span>" data-ru="7 основных <span class='acc'>курсов</span>">7 негізгі <span class="acc">курс</span></h1>
+        <p class="ph-desc" data-kk="Әр курс: 3 модуль, мини‑тест және қорытынды тест." data-ru="Каждый курс: 3 модуля, мини‑тест и итоговый тест.">Әр курс: 3 модуль, мини‑тест және қорытынды тест.</p>
       </div>
-      <div class="clist">
-        <a class="citem" href="https://learndigital.withgoogle.com/digitalgarage" target="_blank"><div class="cico">🌐</div><div class="cinfo"><h4>Google Digital Garage</h4><p data-kk="Цифрлық дағдылар + сертификат" data-ru="Цифровые навыки + сертификат">Цифрлық дағдылар + сертификат</p><div class="ctag">GOOGLE · ТЕГІН · CERT</div></div><div class="carr">→</div></a>
-        <a class="citem" href="https://stepik.org/catalog?q=информационная+безопасность" target="_blank"><div class="cico">🛡️</div><div class="cinfo"><h4 data-kk="Ақпараттық қауіпсіздік — Stepik" data-ru="Информационная безопасность — Stepik">Ақпараттық қауіпсіздік — Stepik</h4><p data-kk="Орысша бастауыш курстар" data-ru="Начальные курсы на русском">Орысша бастауыш курстар</p><div class="ctag">STEPIK · ТЕГІН</div></div><div class="carr">→</div></a>
-        <a class="citem" href="https://www.youtube.com/@NetworkChuck/playlists" target="_blank"><div class="cico">📡</div><div class="cinfo"><h4>NetworkChuck Playlists</h4><p data-kk="Security+, Hacking, Linux, Python" data-ru="Security+, Hacking, Linux, Python">Security+, Hacking, Linux, Python</p><div class="ctag">YOUTUBE · 4.3M · ТЕГІН</div></div><div class="carr">→</div></a>
-        <a class="citem" href="https://www.kaspersky.ru/blog/category/threats" target="_blank"><div class="cico">🔐</div><div class="cinfo"><h4 data-kk="Kaspersky блогы" data-ru="Блог Kaspersky">Kaspersky блогы</h4><p data-kk="Жаңа қауіп-қатерлер мен қорғаныс" data-ru="Актуальные угрозы и защита">Жаңа қауіп-қатерлер мен қорғаныс</p><div class="ctag">KASPERSKY · ТЕГІН</div></div><div class="carr">→</div></a>
-      </div>
+      <div id="courseList" class="course-grid"></div>
     </section>
 
     <!-- SURVEY -->
