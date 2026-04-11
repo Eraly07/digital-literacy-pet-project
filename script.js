@@ -1058,6 +1058,7 @@ function pickModuleAnswer(courseId,mi,qi,optIdx){
     }
   }
   renderCourseView();
+  saveUserProgress();
 }
 
 function startFinalTest(courseId){
