@@ -1166,6 +1166,7 @@ function nextFinal(courseId){
     f.done=true;
   }
   renderFinalQuestion(courseId);
+  saveUserProgress(); 
 }
 
 function resetFinalTest(courseId){
