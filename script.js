@@ -1551,4 +1551,48 @@ window.onload = () => {
   document.getElementById('simEndBtn').addEventListener('click', simEnd);
   document.getElementById('simScenario').addEventListener('change', setSimScenario);
   setMode('adv');
+  // ========== INIT AUTH ==========
+const token = localStorage.getItem('token');
+if (token) {
+  fetch(AI_API_ENDPOINT.replace('/api/ai', '/api/auth/me'), {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => {
+    if (res.ok) return res.json();
+    else throw new Error();
+  }).then(data => {
+    currentUser = data.username;
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'flex';
+    loadUserProgress();
+  }).catch(() => {
+    clearAuth();
+  });
+} else {
+  showAuthModal();
+}
+
+// Auth event listeners
+document.getElementById('loginBtn')?.addEventListener('click', () => {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  login(username, password);
+});
+document.getElementById('registerBtn')?.addEventListener('click', () => {
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  register(username, password);
+});
+document.getElementById('logoutBtn')?.addEventListener('click', logout);
+document.getElementById('authLoginTab')?.addEventListener('click', () => {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('authLoginTab').classList.add('on');
+  document.getElementById('authRegisterTab').classList.remove('on');
+});
+document.getElementById('authRegisterTab')?.addEventListener('click', () => {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('registerForm').style.display = 'block';
+  document.getElementById('authRegisterTab').classList.add('on');
+  document.getElementById('authLoginTab').classList.remove('on');
+});
 };
