@@ -868,3 +868,52 @@ body::after{
   border-radius: 10px;
   margin-top: 0.5rem;
 }
+/* ========== AUTH MODAL STYLES ========== */
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-tabs .stab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--muted);
+}
+
+.auth-tabs .stab.on {
+  border-bottom-color: var(--teal);
+  color: var(--teal);
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-tabs .stab:hover:not(.on) {
+  color: var(--text);
+  border-bottom-color: var(--muted);
+}
+
+/* Logout button */
+#logoutBtn {
+  margin-top: 0.5rem;
+}
+
+/* Auth error messages */
+#authError, #regError {
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* Login/Register form inputs */
+#loginForm .minput,
+#registerForm .minput {
+  text-align: left;
+}
