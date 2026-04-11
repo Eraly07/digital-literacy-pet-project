@@ -31,6 +31,11 @@ function toAnalyzeEndpoint(ai){
 }
 
 async function fetchWithRetry(url, options, retries=3){
+  // Автоматты түрде Authorization хедерін қосу
+  const token = localStorage.getItem('token');
+  if (token && !options.headers) options.headers = {};
+  if (token) options.headers['Authorization'] = `Bearer ${token}`;
+  
   for(let i=0;i<retries;i++){
     try{
       const res=await fetch(url,options);
