@@ -1,5 +1,110 @@
 // ═══════════════════════════════
 // CONFIG
+// ========== AUTH GLOBALS ==========
+let currentUser = null;
+
+// ========== AUTH FUNCTIONS ==========
+function showAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) modal.classList.add('on');
+}
+
+function hideAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) modal.classList.remove('on');
+}
+
+function setAuthToken(token, username) {
+  localStorage.setItem('token', token);
+  currentUser = username;
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.style.display = 'flex';
+  hideAuthModal();
+  // Прогресті жүктеу
+  loadUserProgress();
+  // Бетті жаңарту
+  renderCoursesList();
+  renderCourseView();
+  renderLB();
+}
+
+function clearAuth() {
+  localStorage.removeItem('token');
+  currentUser = null;
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.style.display = 'none';
+  showAuthModal();
+  // Прогресті тазалау
+  Object.keys(courseState).forEach(key => delete courseState[key]);
+  renderCoursesList();
+  renderCourseView();
+}
+
+async function login(username, password) {
+  try {
+    const res = await fetch(AI_API_ENDPOINT.replace('/api/ai', '/api/auth/login'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    setAuthToken(data.token, data.username);
+  } catch (err) {
+    const errorDiv = document.getElementById('authError');
+    if (errorDiv) errorDiv.innerText = err.message;
+  }
+}
+
+async function register(username, password) {
+  try {
+    const res = await fetch(AI_API_ENDPOINT.replace('/api/ai', '/api/auth/register'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    setAuthToken(data.token, data.username);
+  } catch (err) {
+    const errorDiv = document.getElementById('regError');
+    if (errorDiv) errorDiv.innerText = err.message;
+  }
+}
+
+async function logout() {
+  clearAuth();
+}
+
+async function loadUserProgress() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const res = await fetch(AI_API_ENDPOINT.replace('/api/ai', '/api/user/progress'), {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (res.ok && data.progress) {
+      for (const [courseId, prog] of Object.entries(data.progress)) {
+        if (!courseState[courseId]) courseState[courseId] = prog;
+        else Object.assign(courseState[courseId], prog);
+      }
+      renderCourseView();
+    }
+  } catch (err) { console.error(err); }
+}
+
+async function saveUserProgress() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    await fetch(AI_API_ENDPOINT.replace('/api/ai', '/api/user/progress'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ progress: courseState })
+    });
+  } catch (err) { console.error(err); }
+}
 // ═══════════════════════════════
 const AI_API_ENDPOINT = normalizeAiEndpoint(
   window.AI_API_ENDPOINT ||
