@@ -6,31 +6,23 @@
 <title>ЦифрСауат</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<!-- Optional: if your AI backend is on a different domain, set its URL here -->
+<!-- <meta name="ai-endpoint" content="https://your-backend.example.com/api/ai"> -->
 </head>
 <body>
 
 <!-- CANVAS PARTICLES -->
 <canvas id="particles"></canvas>
 
-<!-- AUTH MODAL (кіру/тіркелу) -->
-<div class="mbg" id="authModal">
-  <div class="mbox" style="max-width: 400px;">
-    <div class="auth-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-      <button class="stab on" id="authLoginTab" style="flex:1;">Кіру</button>
-      <button class="stab" id="authRegisterTab" style="flex:1;">Тіркелу</button>
-    </div>
-    <div id="loginForm">
-      <input type="text" id="loginUsername" placeholder="Логин (3-24 символ)" class="minput" autocomplete="username">
-      <input type="password" id="loginPassword" placeholder="Құпия сөз" class="minput" autocomplete="current-password">
-      <div id="authError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
-      <button class="gbtn" id="loginBtn" style="width:100%;">Кіру</button>
-    </div>
-    <div id="registerForm" style="display: none;">
-      <input type="text" id="regUsername" placeholder="Логин (3-24 символ)" class="minput" autocomplete="off">
-      <input type="password" id="regPassword" placeholder="Құпия сөз (кемінде 4 символ)" class="minput" autocomplete="new-password">
-      <div id="regError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
-      <button class="gbtn" id="registerBtn" style="width:100%;">Тіркелу</button>
-    </div>
+<!-- MODAL -->
+<div class="mbg" id="nm">
+  <div class="mbox">
+    <h3>[ NAME ]</h3>
+    <p data-kk="Тест нәтижесі рейтингке қосылады" data-ru="Результат будет добавлен в рейтинг">Тест нәтижесі рейтингке қосылады</p>
+    <input class="minput" id="ni" placeholder="атынызды жазыңыз..." maxlength="24">
+    <button class="gbtn" style="width:100%" onclick="saveName()">
+      <span data-kk="КІРУ →" data-ru="ВОЙТИ →">КІРУ →</span>
+    </button>
   </div>
 </div>
 
@@ -89,10 +81,6 @@
       <span class="ni">🌐</span>
       <span class="nl" id="langLabel">Русский</span>
     </button>
-    <button class="lang-btn" id="logoutBtn" style="display: none; margin-top: 0.5rem;">
-      <span class="ni">🚪</span>
-      <span class="nl" data-kk="Шығу" data-ru="Выйти">Шығу</span>
-    </button>
   </div>
 </aside>
 
@@ -111,7 +99,7 @@
 </div>
 
 <div class="shell">
-  <div></div>
+  <div></div><!-- sidebar placeholder -->
   <main class="main">
 
     <!-- HOME -->
@@ -125,10 +113,26 @@
         </h1>
         <p class="home-desc" data-kk="Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал." data-ru="Научись защищать себя от угроз в интернете. Тренируй реальные ситуации с AI симулятором, пройди тест, получи сертификат.">Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал.</p>
         <div class="home-grid">
-          <div class="hcard" onclick="go('ai')"><span class="hcard-icon">◉</span><div class="hcard-title">AI SIM</div><div class="hcard-desc" data-kk="Нақты жағдайлар" data-ru="Реальные ситуации">Нақты жағдайлар</div></div>
-          <div class="hcard" onclick="go('quiz')"><span class="hcard-icon">◎</span><div class="hcard-title" data-kk="ТЕСТ" data-ru="ТЕСТ">ТЕСТ</div><div class="hcard-desc" data-kk="Курс тесттері + сертификат" data-ru="Тесты курса + сертификат">Курс тесттері + сертификат</div></div>
-          <div class="hcard" onclick="go('tips')"><span class="hcard-icon">◆</span><div class="hcard-title" data-kk="КЕҢЕСТЕР" data-ru="СОВЕТЫ">КЕҢЕСТЕР</div><div class="hcard-desc" data-kk="Қорғаныш ережелері" data-ru="Правила защиты">Қорғаныш ережелері</div></div>
-          <div class="hcard" onclick="go('courses')"><span class="hcard-icon">▣</span><div class="hcard-title" data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</div><div class="hcard-desc" data-kk="Тегін ресурстар" data-ru="Бесплатные ресурсы">Тегін ресурстар</div></div>
+          <div class="hcard" onclick="go('ai')">
+            <span class="hcard-icon">◉</span>
+            <div class="hcard-title">AI SIM</div>
+            <div class="hcard-desc" data-kk="Нақты жағдайлар" data-ru="Реальные ситуации">Нақты жағдайлар</div>
+          </div>
+          <div class="hcard" onclick="go('quiz')">
+            <span class="hcard-icon">◎</span>
+            <div class="hcard-title" data-kk="ТЕСТ" data-ru="ТЕСТ">ТЕСТ</div>
+            <div class="hcard-desc" data-kk="10 сұрақ + сертификат" data-ru="10 вопросов + сертификат">10 сұрақ + сертификат</div>
+          </div>
+          <div class="hcard" onclick="go('tips')">
+            <span class="hcard-icon">◆</span>
+            <div class="hcard-title" data-kk="КЕҢЕСТЕР" data-ru="СОВЕТЫ">КЕҢЕСТЕР</div>
+            <div class="hcard-desc" data-kk="Қорғаныш ережелері" data-ru="Правила защиты">Қорғаныш ережелері</div>
+          </div>
+          <div class="hcard" onclick="go('courses')">
+            <span class="hcard-icon">▣</span>
+            <div class="hcard-title" data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</div>
+            <div class="hcard-desc" data-kk="Тегін ресурстар" data-ru="Бесплатные ресурсы">Тегін ресурстар</div>
+          </div>
         </div>
       </div>
     </section>
@@ -167,64 +171,74 @@
     </section>
 
     <!-- AI -->
-    <section id="ai" class="page">
-      <div class="ph">
-        <div class="ph-tag">// AI SIMULATOR</div>
-        <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
-        <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции тренируй распознавание манипуляций.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың.</p>
-      </div>
-      <div class="sim-tabs" style="margin-bottom:1rem;">
-        <button class="stab on" id="t1" onclick="setMode('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
-        <button class="stab" id="t2" onclick="setMode('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
-      </div>
-      <div id="advPanel">
-        <div class="sim-wrap">
-          <div class="sim-in">
-            <p class="sim-md" id="smd"></p>
-            <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
-            <div class="chip-wrap" id="chips"></div>
-            <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
-            <button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span></button>
-          </div>
-          <div class="sim-out" id="sout">
-            <div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span></div>
-            <div class="dots-loader" id="sl"><div class="dots-text" id="slt">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
-            <div id="sr" style="display:none"></div>
-          </div>
-        </div>
-      </div>
-      <div id="simPanel" style="display:none;">
-        <div class="sim-sel">
-          <div class="sim-sel-label" data-kk="Сценарий" data-ru="Сценарий">Сценарий</div>
-          <select id="simScenario" class="sim-select"></select>
-        </div>
-        <div class="sim-chat-wrap">
-          <div class="sim-chat-box" id="simChatBox">
-            <div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span data-kk="Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз" data-ru="Для начала симуляции нажмите 'СТАРТ'">Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div>
-            <div id="simMessages" style="display:none;"></div>
-            <div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
-          </div>
-          <div class="sim-chat-input">
-            <textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea>
-            <div style="display:flex;gap:.5rem;margin-top:.5rem;">
-              <button class="gbtn" id="simSendBtn" disabled>◉ <span data-kk="ЖІБЕРУ" data-ru="ОТПРАВИТЬ">ЖІБЕРУ</span></button>
-              <button class="gbtn-outline" id="simStartBtn">▶ <span data-kk="БАСТАУ" data-ru="СТАРТ">БАСТАУ</span></button>
-              <button class="gbtn-outline" id="simEndBtn" disabled>■ <span data-kk="АЯҚТАУ" data-ru="ЗАВЕРШИТЬ">АЯҚТАУ</span></button>
-            </div>
-          </div>
-          <div id="simResult" style="display:none;margin-top:1rem;"></div>
-        </div>
-      </div>
-    </section>
+<section id="ai" class="page">
+  <div class="ph">
+    <div class="ph-tag">// AI SIMULATOR</div>
+    <h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1>
+    <p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции тренируй распознавание манипуляций.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың.</p>
+  </div>
 
-    <!-- COURSE VIEW (quiz) -->
+  <div class="sim-tabs" style="margin-bottom:1rem;">
+    <button class="stab on" id="t1" onclick="setMode('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button>
+    <button class="stab" id="t2" onclick="setMode('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button>
+  </div>
+
+  <!-- ADV PANEL -->
+  <div id="advPanel">
+    <div class="sim-wrap">
+      <div class="sim-in">
+        <p class="sim-md" id="smd"></p>
+        <div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div>
+        <div class="chip-wrap" id="chips"></div>
+        <textarea class="sim-ta" id="sta" placeholder="..."></textarea>
+        <button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">
+          ◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span>
+        </button>
+      </div>
+      <div class="sim-out" id="sout">
+        <div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span></div>
+        <div class="dots-loader" id="sl"><div class="dots-text" id="slt">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
+        <div id="sr" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIM PANEL -->
+  <div id="simPanel" style="display:none;">
+    <div class="sim-sel">
+      <div class="sim-sel-label" data-kk="Сценарий" data-ru="Сценарий">Сценарий</div>
+      <select id="simScenario" class="sim-select"></select>
+    </div>
+    <div class="sim-chat-wrap">
+      <div class="sim-chat-box" id="simChatBox">
+        <div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span data-kk="Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз" data-ru="Для начала симуляции нажмите 'СТАРТ'">Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div>
+        <div id="simMessages" style="display:none;"></div>
+        <div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div>
+      </div>
+      <div class="sim-chat-input">
+        <textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+          <button class="gbtn" id="simSendBtn" disabled>◉ <span data-kk="ЖІБЕРУ" data-ru="ОТПРАВИТЬ">ЖІБЕРУ</span></button>
+          <button class="gbtn-outline" id="simStartBtn">▶ <span data-kk="БАСТАУ" data-ru="СТАРТ">БАСТАУ</span></button>
+          <button class="gbtn-outline" id="simEndBtn" disabled>■ <span data-kk="АЯҚТАУ" data-ru="ЗАВЕРШИТЬ">АЯҚТАУ</span></button>
+        </div>
+      </div>
+      <div id="simResult" style="display:none;margin-top:1rem;"></div>
+    </div>
+  </div>
+</section>
+
+    <!-- QUIZ -->
     <section id="quiz" class="page">
       <div class="ph">
-        <div class="ph-tag">// <span data-kk="КУРС БЕТІ" data-ru="СТРАНИЦА КУРСА">КУРС БЕТІ</span></div>
-        <h1 class="ph-title" data-kk="Оқу <span class='acc'>бағдарламасы</span>" data-ru="<span class='acc'>Программа</span> обучения">Оқу <span class="acc">бағдарламасы</span></h1>
-        <p class="ph-desc" data-kk="Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат." data-ru="Модули, мини‑тесты и итоговый тест. После завершения — рейтинг и сертификат.">Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат.</p>
+        <div class="ph-tag">// <span data-kk="ӨЗІҢДІ ТЕКСЕР" data-ru="ПРОВЕРЬ СЕБЯ">ӨЗІҢДІ ТЕКСЕР</span></div>
+        <h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>тесті</span>" data-ru="Тест по <span class='acc'>цифровой грамотности</span>">Цифрлық сауаттылық <span class="acc">тесті</span></h1>
+        <p class="ph-desc" data-kk="10 сұрақ. 60%+ болса сертификат жүктеуге болады." data-ru="10 вопросов. При 60%+ можно скачать сертификат.">10 сұрақ. 60%+ болса сертификат жүктеуге болады.</p>
       </div>
-      <div id="courseView"></div>
+      <div class="qwrap">
+        <div class="qprog-bg"><div class="qprog-fill" id="qp" style="width:0%"></div></div>
+        <div id="qb"></div>
+      </div>
     </section>
 
     <!-- LEADERBOARD -->
@@ -240,14 +254,19 @@
       <p style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;" data-kk="// нақты уақытта жаңартылады" data-ru="// обновляется в реальном времени">// нақты уақытта жаңартылады</p>
     </section>
 
-    <!-- COURSES LIST -->
+
+    <!-- COURSES -->
     <section id="courses" class="page">
       <div class="ph">
         <div class="ph-tag">// <span data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</span></div>
-        <h1 class="ph-title" data-kk="7 негізгі <span class='acc'>курс</span>" data-ru="7 основных <span class='acc'>курсов</span>">7 негізгі <span class="acc">курс</span></h1>
-        <p class="ph-desc" data-kk="Әр курс: 3 модуль, мини‑тест және қорытынды тест." data-ru="Каждый курс: 3 модуля, мини‑тест и итоговый тест.">Әр курс: 3 модуль, мини‑тест және қорытынды тест.</p>
+        <h1 class="ph-title" data-kk="Тегін оқу <span class='acc'>ресурстары</span>" data-ru="Бесплатные учебные <span class='acc'>ресурсы</span>">Тегін оқу <span class="acc">ресурстары</span></h1>
       </div>
-      <div id="courseList" class="course-grid"></div>
+      <div class="clist">
+        <a class="citem" href="https://learndigital.withgoogle.com/digitalgarage" target="_blank"><div class="cico">🌐</div><div class="cinfo"><h4>Google Digital Garage</h4><p data-kk="Цифрлық дағдылар + сертификат" data-ru="Цифровые навыки + сертификат">Цифрлық дағдылар + сертификат</p><div class="ctag">GOOGLE · ТЕГІН · CERT</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://stepik.org/catalog?q=информационная+безопасность" target="_blank"><div class="cico">🛡️</div><div class="cinfo"><h4 data-kk="Ақпараттық қауіпсіздік — Stepik" data-ru="Информационная безопасность — Stepik">Ақпараттық қауіпсіздік — Stepik</h4><p data-kk="Орысша бастауыш курстар" data-ru="Начальные курсы на русском">Орысша бастауыш курстар</p><div class="ctag">STEPIK · ТЕГІН</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://www.youtube.com/@NetworkChuck/playlists" target="_blank"><div class="cico">📡</div><div class="cinfo"><h4>NetworkChuck Playlists</h4><p data-kk="Security+, Hacking, Linux, Python" data-ru="Security+, Hacking, Linux, Python">Security+, Hacking, Linux, Python</p><div class="ctag">YOUTUBE · 4.3M · ТЕГІН</div></div><div class="carr">→</div></a>
+        <a class="citem" href="https://www.kaspersky.ru/blog/category/threats" target="_blank"><div class="cico">🔐</div><div class="cinfo"><h4 data-kk="Kaspersky блогы" data-ru="Блог Kaspersky">Kaspersky блогы</h4><p data-kk="Жаңа қауіп-қатерлер мен қорғаныс" data-ru="Актуальные угрозы и защита">Жаңа қауіп-қатерлер мен қорғаныс</p><div class="ctag">KASPERSKY · ТЕГІН</div></div><div class="carr">→</div></a>
+      </div>
     </section>
 
     <!-- SURVEY -->
