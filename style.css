@@ -593,6 +593,150 @@ nav::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(0,240,200,0.
 }
 .carr{margin-left:auto;color:var(--muted);flex-shrink:0;}
 
+/* ── ЖАҢА КУРС КАРТОЧКАЛАРЫ (grid) ── */
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.course-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.2rem 1.2rem 1rem 1.2rem;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  backdrop-filter: blur(4px);
+}
+
+.course-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 240, 200, 0.1);
+}
+
+.course-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  cursor: pointer;
+}
+
+.course-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.2px;
+}
+
+.course-desc {
+  color: var(--muted2);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.course-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--teal);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+.course-toggle {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--teal);
+  border: 1px solid rgba(0, 240, 200, 0.35);
+  padding: 0.2rem 0.7rem;
+  border-radius: 40px;
+  white-space: nowrap;
+  background: rgba(0, 240, 200, 0.04);
+  transition: all 0.2s;
+}
+
+.course-toggle:hover {
+  background: rgba(0, 240, 200, 0.12);
+  border-color: var(--teal);
+}
+
+.course-details {
+  display: none;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(0, 240, 200, 0.2);
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.course-card.open .course-details {
+  display: flex;
+}
+
+.course-struct {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.course-step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted2);
+  background: rgba(0, 240, 200, 0.04);
+  border: 1px solid rgba(0, 240, 200, 0.1);
+  padding: 0.4rem 0.7rem;
+  border-radius: 14px;
+  transition: background 0.2s;
+}
+
+.course-step .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+  color: var(--teal);
+  background: rgba(0, 240, 200, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+}
+
+.course-actions {
+  margin-top: 0.3rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.course-cta {
+  padding: 0.4rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  color: #04040a;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 240, 200, 0.2);
+}
+
+.course-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 240, 200, 0.3);
+  background: linear-gradient(135deg, var(--teal2), var(--teal));
+}
+
 /* ── SURVEY ── */
 .sform{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.8rem;max-width:600px;}
 .sq{margin-bottom:1.5rem;}
