@@ -1375,3 +1375,12 @@ window.onload = () => {
   document.getElementById('simScenario').addEventListener('change', setSimScenario);
   setMode('adv');
 };
+// Ғылыми зерттеу сілтемесін басқару
+const researchLink = document.getElementById('researchPaperLink');
+if (researchLink) {
+    researchLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Назарбаев Университетінің зерттеуінің DOI сілтемесі
+        window.open('https://doi.org/10.17059/ekon.reg.2025-4-6', '_blank');
+    });
+}
