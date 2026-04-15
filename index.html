@@ -62,7 +62,7 @@
     <div class="nav-group">
       <div class="nav-group-label" data-kk="БАСҚА" data-ru="ДРУГОЕ">БАСҚА</div>
       <button class="nav-item" onclick="go('lb')"><span class="ni">🏆</span><span class="nl" data-kk="Рейтинг" data-ru="Рейтинг">Рейтинг</span></button>
-      <button class="nav-item" onclick="go('survey')"><span class="ni">📋</span><span class="nl" data-kk="Сауалнама" data-ru="Опрос">Сауалнама</span></button>
+      <button class="nav-item" onclick="go('diagnostic')"><span class="ni">📊</span><span class="nl" data-kk="Диагностика" data-ru="Диагностика">Диагностика</span></button>
     </div>
   </nav>
   <div class="sidebar-footer">
@@ -80,7 +80,7 @@
   <button class="nav-item" onclick="go('quiz')">◎</button>
   <button class="nav-item" onclick="go('lb')">🏆</button>
   <button class="nav-item" onclick="go('courses')">▣</button>
-  <button class="nav-item" onclick="go('survey')">◇</button>
+  <button class="nav-item" onclick="go('diagnostic')">📊</button>
   <button class="lang-btn" id="lb3" onclick="toggleLang()" style="font-size:.68rem;padding:.3rem .5rem;white-space:nowrap;flex-shrink:0;">RU</button>
 </div>
 
@@ -103,150 +103,36 @@
       </div>
     </section>
 
-    <!-- INFO (толық нұсқа) -->
+    <!-- INFO (бұрынғы күйінде, қысқартылған) -->
     <section id="info" class="page">
       <div class="ph"><div class="ph-tag">// <span data-kk="НЕГІЗДЕР" data-ru="ОСНОВЫ">НЕГІЗДЕР</span></div><h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>дегеніміз</span> не?" data-ru="Что такое цифровая <span class='acc'>грамотность</span>?">Цифрлық сауаттылық <span class="acc">дегеніміз</span> не?</h1><p class="ph-desc" data-kk="Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті." data-ru="Умение эффективно, безопасно и ответственно использовать цифровые технологии.">Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті.</p></div>
-      
-      <div class="grid-3">
-        <div class="ncard"><div class="ncard-icon">💻</div><h3 data-kk="Технологиялық дағдылар" data-ru="Технологические навыки">Технологиялық дағдылар</h3><p data-kk="Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу." data-ru="Умение использовать компьютер, смартфон и цифровые платформы.">Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу.</p></div>
-        <div class="ncard"><div class="ncard-icon">🔒</div><h3 data-kk="Ақпараттық қауіпсіздік" data-ru="Информационная безопасность">Ақпараттық қауіпсіздік</h3><p data-kk="Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану." data-ru="Защита личных данных, надёжные пароли, защита от фишинга.">Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану.</p></div>
-        <div class="ncard"><div class="ncard-icon">🔍</div><h3 data-kk="Ақпаратты бағалау" data-ru="Оценка информации">Ақпаратты бағалау</h3><p data-kk="Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату." data-ru="Проверка достоверности информации, определение надёжных источников.">Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату.</p></div>
-        <div class="ncard"><div class="ncard-icon">🤝</div><h3 data-kk="Цифрлық этика" data-ru="Цифровая этика">Цифрлық этика</h3><p data-kk="Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау." data-ru="Ответственное поведение онлайн, уважение авторских прав.">Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау.</p></div>
-        <div class="ncard"><div class="ncard-icon">📚</div><h3 data-kk="Цифрлық оқу" data-ru="Цифровое обучение">Цифрлық оқу</h3><p data-kk="Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру." data-ru="Эффективное обучение через онлайн-курсы и e-learning.">Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру.</p></div>
-        <div class="ncard"><div class="ncard-icon">🌐</div><h3 data-kk="Желілік мәдениет" data-ru="Сетевая культура">Желілік мәдениет</h3><p data-kk="Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау." data-ru="Правильное общение в соцсетях, создание профессионального имиджа.">Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау.</p></div>
-      </div>
-
-      <!-- СТАТИСТИКА БЛОГЫ -->
-      <div class="ph" style="margin-top: 3rem;">
-        <div class="ph-tag">📊 // ЦИФРЛЫҚ ҚАЗАҚСТАН СТАТИСТИКАСЫ</div>
-        <h2 class="ph-title">Нақты <span class="acc">сандар</span> мен <span class="acc">деректер</span></h2>
-        <p class="ph-desc">Ұлттық статистика бюросының ресми ақпараты бойынша (2025-2026 жж.)</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-number">95.6%</div><div class="stat-label">Интернет пайдаланушылар үлесі (16-74 жас)</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
-        <div class="stat-card"><div class="stat-number">92.4%</div><div class="stat-label">Цифрлық сауаттылық деңгейі</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
-        <div class="stat-card"><div class="stat-number">88.2%</div><div class="stat-label">Компьютер/ноутбук/планшет қолданушылар</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
-        <div class="stat-card"><div class="stat-number">700+</div><div class="stat-label">Азамат ХҚКО-да тегін оқытудан өтті (бір айда)</div><div class="stat-source">«Азаматтарға арналған үкімет» КЕ, 2026 ж.</div></div>
-        <div class="stat-card"><div class="stat-number">99.5%</div><div class="stat-label">Үй шаруашылықтарындағы ұялы телефон қолдану</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
-        <div class="stat-card"><div class="stat-number">#digital2026</div><div class="stat-label">Цифрландыру және жасанды интеллект жылы</div><div class="stat-source">Қазақстан Республикасы Үкіметінің бастамасы</div></div>
-      </div>
-
-      <!-- ЖАҢАЛЫҚТАР БЛОГЫ -->
-      <div class="ph" style="margin-top: 3rem;">
-        <div class="ph-tag">📰 // ЦИФРЛАНДЫРУ ЖАҢАЛЫҚТАРЫ</div>
-        <h2 class="ph-title">Соңғы <span class="acc">өзгерістер</span> мен <span class="acc">бастамалар</span></h2>
-        <p class="ph-desc">Еліміздегі цифрлық сауаттылық пен қызметтерді дамыту бағытындағы жаңалықтар.</p>
-      </div>
-
-      <div class="news-list">
-        <div class="news-item">
-          <div class="news-date">13 Сәуір 2026</div>
-          <div class="news-title">700-ге жуық қазақстандық бір айда ХҚКО-ларда цифрлық сауаттылықты үйренді</div>
-          <div class="news-desc">Наурыз айынан бастап ХҚКО-ларда цифрлық сауаттылық бойынша оқыту курстары Қазақстанның барлық өңірінде қолжетімді болды. Бір айдың ішінде шамамен 700 қазақстандық оқудан өтіп, мемлекеттік қызметтерді онлайн алуды меңгерген.</div>
-          <div class="news-source">Дереккөз: «Азаматтарға арналған үкімет» мемлекеттік корпорациясы</div>
-        </div>
-        <div class="news-item">
-          <div class="news-date">01 Сәуір 2026</div>
-          <div class="news-title">Қазақстандықтардың 95,6% интернет қолданады</div>
-          <div class="news-desc">Ұлттық статистика бюросының мәліметінше, 2025 жылы 16-74 жас аралығындағы интернет пайдаланушылар үлесі 95,6% құраған. Цифрлық сауаттылық деңгейі 92,4% жеткен.</div>
-          <div class="news-source">Дереккөз: Ұлттық статистика бюросы</div>
-        </div>
-      </div>
-
-      <!-- ҚОСЫМША РЕСУРСТАР БЛОГЫ -->
-      <div class="ph" style="margin-top: 3rem;">
-        <div class="ph-tag">🔗 // ПАЙДАЛЫ РЕСУРСТАР</div>
-        <h2 class="ph-title">Өз біліміңізді <span class="acc">тереңдету</span> үшін</h2>
-        <p class="ph-desc">Цифрлық сауаттылықты дамытуға арналған ресми және ғылыми ресурстар.</p>
-      </div>
-
-      <div class="resources-grid">
-        <a href="https://stat.gov.kz/industries/business-statistics/stat-it/dynamic-tables/" target="_blank" class="resource-card">
-          <div class="resource-icon">📊</div>
-          <div class="resource-title">Ұлттық статистика бюросы</div>
-          <div class="resource-desc">АКТ статистикасы, динамикалық кестелер және цифрлық сауаттылық индикаторлары.</div>
-          <div class="resource-link">stat.gov.kz →</div>
-        </a>
-        <a href="#" class="resource-card" id="researchPaperLink">
-          <div class="resource-icon">🎓</div>
-          <div class="resource-title">Қазақстанның цифрлық трансформациясы</div>
-          <div class="resource-desc">Назарбаев Университетінің Қазақстанның цифрлық дайындығын талдауы (KZ-DRI).</div>
-          <div class="resource-link">Зерттеуді оқу →</div>
-        </a>
-        <a href="https://egov.kz" target="_blank" class="resource-card">
-          <div class="resource-icon">🇰🇿</div>
-          <div class="resource-title">Электрондық үкімет</div>
-          <div class="resource-desc">Мемлекеттік қызметтердің бірыңғай платформасы.</div>
-          <div class="resource-link">egov.kz →</div>
-        </a>
-      </div>
+      <div class="grid-3"><div class="ncard"><div class="ncard-icon">💻</div><h3>Технологиялық дағдылар</h3><p>Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу.</p></div><div class="ncard"><div class="ncard-icon">🔒</div><h3>Ақпараттық қауіпсіздік</h3><p>Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану.</p></div><div class="ncard"><div class="ncard-icon">🔍</div><h3>Ақпаратты бағалау</h3><p>Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату.</p></div><div class="ncard"><div class="ncard-icon">🤝</div><h3>Цифрлық этика</h3><p>Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау.</p></div><div class="ncard"><div class="ncard-icon">📚</div><h3>Цифрлық оқу</h3><p>Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру.</p></div><div class="ncard"><div class="ncard-icon">🌐</div><h3>Желілік мәдениет</h3><p>Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау.</p></div></div>
     </section>
 
     <!-- TIPS -->
-<section id="tips" class="page">
-  <div class="ph">
-    <div class="ph-tag">// <span data-kk="ҚАУІПСІЗДІК" data-ru="БЕЗОПАСНОСТЬ">ҚАУІПСІЗДІК</span></div>
-    <h1 class="ph-title" data-kk="Цифрлық қауіпсіздік <span class='acc'>кеңестері</span>" data-ru="Советы по <span class='acc'>цифровой безопасности</span>">Цифрлық қауіпсіздік <span class="acc">кеңестері</span></h1>
-    <p class="ph-desc" data-kk="Интернетте өзіңді қалай қорғайсың? Мына кеңестер көмектеседі." data-ru="Как защитить себя в интернете? Эти советы помогут.">Интернетте өзіңді қалай қорғайсың? Мына кеңестер көмектеседі.</p>
-  </div>
-
-  <div>
-    <div class="tip-row">
-      <div class="tip-n">01</div>
-      <div>
-        <h4>🔑 Сенімді пароль қой</h4>
-        <p>Пароль ұзын болуы керек – кем дегенде 12 символ. Әріптерді (кіші, үлкен), сандарды және арнайы белгілерді (!@#$%) қолдан. Бір парольді бірнеше аккаунтта қайталама. Есіңде ұстау қиын болса, пароль менеджерін (Bitwarden, 1Password) пайдалан. Ол барлық парольдеріңді шифрлап сақтайды.</p>
+    <section id="tips" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="ҚАУІПСІЗДІК" data-ru="БЕЗОПАСНОСТЬ">ҚАУІПСІЗДІК</span></div><h1 class="ph-title" data-kk="Цифрлық қауіпсіздік <span class='acc'>кеңестері</span>" data-ru="Советы по <span class='acc'>цифровой безопасности</span>">Цифрлық қауіпсіздік <span class="acc">кеңестері</span></h1></div>
+      <div class="tips-grid">
+        <div class="tip-row"><div class="tip-n">01</div><div><h4>🔑 Күшті пароль қой</h4><p>Пароль ұзын болсын. Әріп, сан, белгі араластыр. Бір парольді бірнеше жерде қолданба. Bitwarden сияқты менеджерге сақта.</p></div></div>
+        <div class="tip-row"><div class="tip-n">02</div><div><h4>✅ Екі факторлы аутентификацияны (2FA) қос</h4><p>Парольден кейін код сұрайды. Google Authenticator сияқты қосымшаны пайдалан.</p></div></div>
+        <div class="tip-row"><div class="tip-n">03</div><div><h4>🚫 Фишингтен сақтан</h4><p>Банк, әлеуметтік желі атынан SMS, пошта келсе – асықпа. Сілтемеге бірден баспа. Доменді тексер. Банк ешқашан SMS-код сұрамайды.</p></div></div>
+        <div class="tip-row"><div class="tip-n">04</div><div><h4>🌐 Қоғамдық Wi-Fi желілеріне сақ бол</h4><p>Кафе, әуежайдағы тегін Wi-Fi қауіпті. Банкке кірме, құпия сөз енгізбе. VPN пайдалан.</p></div></div>
+        <div class="tip-row"><div class="tip-n">05</div><div><h4>🤖 Жасанды интеллектпен жұмыс істегенде абай бол</h4><p>ChatGPT-ке паспорт, ИИН, пароль жазба. AI кейде қателеседі, жауаптарын тексер.</p></div></div>
+        <div class="tip-row"><div class="tip-n">06</div><div><h4>📱 Қосымшалардың рұқсаттарын бақыла</h4><p>Ойын неге контактілеріңді сұрайды? Артық рұқсат берме.</p></div></div>
       </div>
-    </div>
-    <div class="tip-row">
-      <div class="tip-n">02</div>
-      <div>
-        <h4>✅ Екі факторлы аутентификацияны (2FA) қос</h4>
-        <p>Бұл – парольден кейін тағы бір қорғаныс деңгейі. Кірген кезде телефонға немесе арнайы қосымшаға код келеді. SMS-тен гөрі Google Authenticator, Microsoft Authenticator немесе TOTP қолданғаны дұрыс. Егер мүмкіндік болса, физикалық ключті (YubiKey) де қолдануға болады. Бұл хакерлерге парольді білсе де аккаунтыңа кіруге мүмкіндік бермейді.</p>
-      </div>
-    </div>
-    <div class="tip-row">
-      <div class="tip-n">03</div>
-      <div>
-        <h4>🚫 Фишингтен қалай сақтануға болады?</h4>
-        <p>Егер банктен, пошта қызметінен немесе әлеуметтік желіден хат немесе SMS келсе, жіберушіні мұқият тексер. Сілтемеге бірден баспа – тінтуір курсорын апарып, нақты мекенжайды көр. Ресми доменнің жазылуында бір әріп қате болуы мүмкін (мысалы, google.com орнына go0gle.com). Банктер SMS-код, пароль, карта нөмірі сияқты құпия деректерді ешқашан сұрамайды. Күдіктенсең, ресми сайттағы телефонға өзің қоңырау шал.</p>
-      </div>
-    </div>
-    <div class="tip-row">
-      <div class="tip-n">04</div>
-      <div>
-        <h4>🌐 Қоғамдық Wi-Fi желілеріне сақ бол</h4>
-        <p>Кафелер, әуежайлар, сауда орталықтарындағы тегін Wi-Fi көбінесе шифрланбаған. Хакерлер сол желіге қосылып, трафигіңді ұстап ала алады. Мұндай желіде банктік операциялар жасама, поштаңа кірме, құпия сөз енгізбе. Егер әлдеқайда қолдануға тура келсе, VPN қосуды ұмытпа. VPN трафигіңді шифрлайды, тіпті ашық желіде де деректерің қорғалады.</p>
-      </div>
-    </div>
-    <div class="tip-row">
-      <div class="tip-n">05</div>
-      <div>
-        <h4>🤖 Жасанды интеллектпен жұмыс істегенде абай бол</h4>
-        <p>ChatGPT, Gemini және басқа AI модельдері көмекші ретінде өте пайдалы, бірақ оларға жеке деректеріңді – паспорт нөмірің, ИИН, карта деректері, құпия сөздеріңді енгізбе. Бұл деректер серверде сақталып, қауіпсіздік олқылығы болуы мүмкін. Сонымен қатар, AI кейде сенімсіз ақпарат береді (hallucination), сондықтан маңызды мәселелерде жауаптарын 2-3 басқа көзден тексеріп алған жөн.</p>
-      </div>
-    </div>
-    <div class="tip-row">
-      <div class="tip-n">06</div>
-      <div>
-        <h4>📱 Қосымшалардың рұқсаттарын бақыла</h4>
-        <p>Қосымша орнатқанда, оның не сұрап тұрғанына назар аудар. Фонарик қосымшасы неге контактілеріңе немесе орналасқан жеріңе қолжеткізу керек? Ойынға микрофон не үшін керек? Артық рұқсаттарды берме. Рұқсатты кейін телефон баптауларынан өшіріп тастауға болады. Қолданбаны ұзақ уақыт қолданбасаң, оны жойып жібер.</p>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
     <!-- AI -->
     <section id="ai" class="page">
       <div class="ph"><div class="ph-tag">// AI SIMULATOR</div><h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1><p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции тренируй распознавание манипуляций.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың.</p></div>
       <div class="sim-tabs" style="margin-bottom:1rem;"><button class="stab on" id="t1" onclick="setMode('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button><button class="stab" id="t2" onclick="setMode('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button></div>
-      <div id="advPanel">
-        <div class="sim-wrap"><div class="sim-in"><p class="sim-md" id="smd"></p><div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div><div class="chip-wrap" id="chips"></div><textarea class="sim-ta" id="sta" placeholder="..."></textarea><button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span></button></div><div class="sim-out" id="sout"><div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span></div><div class="dots-loader" id="sl"><div class="dots-text" id="slt">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div><div id="sr" style="display:none"></div></div></div>
-      </div>
-      <div id="simPanel" style="display:none;">
-        <div class="sim-sel"><div class="sim-sel-label" data-kk="Сценарий" data-ru="Сценарий">Сценарий</div><select id="simScenario" class="sim-select"></select></div>
-        <div class="sim-chat-wrap"><div class="sim-chat-box" id="simChatBox"><div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span data-kk="Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз" data-ru="Для начала симуляции нажмите 'СТАРТ'">Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div><div id="simMessages" style="display:none;"></div><div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div></div><div class="sim-chat-input"><textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea><div style="display:flex;gap:.5rem;">
+      <div id="advPanel"><div class="sim-wrap"><div class="sim-in"><p class="sim-md" id="smd"></p><div class="chip-wrap" id="chips"></div><textarea class="sim-ta" id="sta" placeholder="..."></textarea><button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">◉ AI НҰСҚАУЫН АЛУ</button></div><div class="sim-out"><div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span>Жағдай жазып жіберіңіз</span></div><div class="dots-loader" id="sl"><div class="dots-text">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div><div id="sr" style="display:none"></div></div></div></div>
+      <div id="simPanel" style="display:none;"><div class="sim-sel"><div class="sim-sel-label">Сценарий</div><select id="simScenario" class="sim-select"></select></div><div class="sim-chat-wrap"><div class="sim-chat-box" id="simChatBox"><div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span>Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div><div id="simMessages" style="display:none;"></div><div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div></div><div class="sim-chat-input"><textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;"><button class="gbtn" id="simSendBtn" disabled>◉ ЖІБЕРУ</button><button class="gbtn-outline" id="simStartBtn">▶ БАСТАУ</button><button class="gbtn-outline" id="simEndBtn" disabled>■ АЯҚТАУ</button></div></div><div id="simResult" style="display:none;margin-top:1rem;"></div></div></div>
+    </section>
+
+    <!-- COURSE VIEW -->
+    <section id="quiz" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="КУРС БЕТІ" data-ru="СТРАНИЦА КУРСА">КУРС БЕТІ</span></div><h1 class="ph-title" data-kk="Оқу <span class='acc'>бағдарламасы</span>" data-ru="<span class='acc'>Программа</span> обучения">Оқу <span class="acc">бағдарламасы</span></h1><p class="ph-desc" data-kk="Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат." data-ru="Модули, мини‑тесты и итоговый тест. После завершения — рейтинг и сертификат.">Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат.</p></div>
       <div id="courseView"></div>
     </section>
 
@@ -254,7 +140,6 @@
     <section id="lb" class="page">
       <div class="ph"><div class="ph-tag">// <span data-kk="РЕЙТИНГ" data-ru="РЕЙТИНГ">РЕЙТИНГ</span></div><h1 class="ph-title" data-kk="Ең жоғары <span class='acc'>нәтижелер</span>" data-ru="Лучшие <span class='acc'>результаты</span>">Ең жоғары <span class="acc">нәтижелер</span></h1></div>
       <div class="lbtable"><div class="lbhead"><div>#</div><div data-kk="АТЫ" data-ru="ИМЯ">АТЫ</div><div data-kk="ҰПАЙ" data-ru="ОЧКИ">ҰПАЙ</div><div data-kk="КҮНІ" data-ru="ДАТА">КҮНІ</div></div><div id="lbb"></div></div>
-      <p style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;" data-kk="// нақты уақытта жаңартылады" data-ru="// обновляется в реальном времени">// нақты уақытта жаңартылады</p>
     </section>
 
     <!-- COURSES LIST -->
@@ -263,10 +148,11 @@
       <div id="courseList" class="course-grid"></div>
     </section>
 
-    <!-- SURVEY -->
-    <section id="survey" class="page">
-      <div class="ph"><div class="ph-tag">// <span data-kk="ЗЕРТТЕУ" data-ru="ИССЛЕДОВАНИЕ">ЗЕРТТЕУ</span></div><h1 class="ph-title" data-kk="<span class='acc'>Сауалнама</span>" data-ru="<span class='acc'>Опрос</span>"><span class="acc">Сауалнама</span></h1><p class="ph-desc" data-kk="Зерттеу жұмысы үшін сауалнамаға қатысыңыз." data-ru="Примите участие в опросе для исследования.">Зерттеу жұмысы үшін сауалнамаға қатысыңыз.</p></div>
-      <div class="sform"><div id="sf"><div class="sq"><div class="sql" data-kk="1. Күніне орташа қанша сағат интернет пайдаланасыз?" data-ru="1. Сколько часов в день вы пользуетесь интернетом?">1. Күніне орташа қанша сағат интернет пайдаланасыз?</div><div class="ropts"><label class="ropt"><input type="radio" name="q1" value="1"><span data-kk="1–2 сағат" data-ru="1–2 часа">1–2 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="2"><span data-kk="3–4 сағат" data-ru="3–4 часа">3–4 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="3"><span data-kk="5–6 сағат" data-ru="5–6 часов">5–6 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="4"><span data-kk="6+ сағат" data-ru="6+ часов">6+ сағат</span></label></div></div><div class="sq"><div class="sql" data-kk="2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?" data-ru="2. Используете одинаковый пароль для всех аккаунтов?">2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?</div><div class="ropts"><label class="ropt"><input type="radio" name="q2" value="yes"><span data-kk="Иә" data-ru="Да">Иә</span></label><label class="ropt"><input type="radio" name="q2" value="sometimes"><span data-kk="Кейде бірдей" data-ru="Иногда одинаковые">Кейде бірдей</span></label><label class="ropt"><input type="radio" name="q2" value="no"><span data-kk="Жоқ, бөлек" data-ru="Нет, разные">Жоқ, бөлек</span></label></div></div><div class="sq"><div class="sql" data-kk="3. Фишинг дегенді білесіз бе?" data-ru="3. Знаете ли вы, что такое фишинг?">3. Фишинг дегенді білесіз бе?</div><div class="ropts"><label class="ropt"><input type="radio" name="q3" value="yes"><span data-kk="Иә, жақсы білемін" data-ru="Да, хорошо знаю">Иә, жақсы білемін</span></label><label class="ropt"><input type="radio" name="q3" value="approx"><span data-kk="Шамамен білемін" data-ru="Примерно знаю">Шамамен білемін</span></label><label class="ropt"><input type="radio" name="q3" value="no"><span data-kk="Естіген жоқпын" data-ru="Не слышал">Естіген жоқпын</span></label></div></div><div class="sq"><div class="sql" data-kk="4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз" data-ru="4. Оцените свой уровень цифровой безопасности">4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз</div><div class="ropts"><label class="ropt"><input type="radio" name="q4" value="high"><span data-kk="Жоғары" data-ru="Высокий">Жоғары</span></label><label class="ropt"><input type="radio" name="q4" value="mid"><span data-kk="Орташа" data-ru="Средний">Орташа</span></label><label class="ropt"><input type="radio" name="q4" value="low"><span data-kk="Төмен" data-ru="Низкий">Төмен</span></label></div></div><button class="gbtn" style="max-width:180px" onclick="submitS()"><span data-kk="ЖІБЕРУ →" data-ru="ОТПРАВИТЬ →">ЖІБЕРУ →</span></button></div><div class="sdone" id="sd"><div class="sdone-ico">✅</div><h3 data-kk="Рахмет!" data-ru="Спасибо!">Рахмет!</h3><p style="color:var(--muted2);margin-top:.4rem;" data-kk="Жауабыңыз қабылданды." data-ru="Ваш ответ принят.">Жауабыңыз қабылданды.</p></div></div>
+    <!-- DIAGNOSTIC (бұрынғы SURVEY орнына) -->
+    <section id="diagnostic" class="page">
+      <div class="ph"><div class="ph-tag">📊 // ДИАГНОСТИКА</div><h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>деңгейіңіз</span>" data-ru="Ваш уровень <span class='acc'>цифровой грамотности</span>">Цифрлық сауаттылық <span class="acc">деңгейіңіз</span></h1>
+      <p class="ph-desc" data-kk="10 сұрақтан тұратын тест арқылы біліміңізді тексеріңіз. Нәтиже рейтингке қосылады." data-ru="Проверьте свои знания с помощью теста из 10 вопросов. Результат добавится в рейтинг.">10 сұрақтан тұратын тест арқылы біліміңізді тексеріңіз. Нәтиже рейтингке қосылады.</p></div>
+      <div id="diagnosticBox"></div>
     </section>
 
   </main>
