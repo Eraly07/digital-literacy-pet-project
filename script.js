@@ -1337,19 +1337,17 @@ async function simStart(){
     _simSetLoader(true);
     
     try{
+        // Бос messages жібереміз, сервер бірінші хабарды AI-сыз қайтарады
         const res = await fetchWithRetry(AI_API_ENDPOINT,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ 
-                mode: 'sim', 
-                text: 'start',        // ← ВОТ ЧТО ВАЖНО!
-                scenario: simCurrentScenario 
-            })
+            body:JSON.stringify({ mode:'sim', messages:[], scenario:simCurrentScenario })
         });
         const data = await res.json();
         
+        // Егер сервер қате қайтарса, fallback қолданамыз
         let firstMsg = data?.content;
-        if (!firstMsg || firstMsg.includes('cannot') || firstMsg.includes('sorry')) {
+        if (!firstMsg || firstMsg.includes('cannot') || firstMsg.includes('sorry') || firstMsg.includes('ai')) {
             const fallbacks = {
                 bank: lang==='kk' ? 'Сәлеметсіз бе! Бұл Халық Банкінің қауіпсіздік бөлімі. Сіздің шотыңызда күдікті операция анықталды.' : 'Здравствуйте! Это служба безопасности банка. На вашем счете подозрительная операция.',
                 delivery: lang==='kk' ? 'Сәлем! Сіздің жөнелтіліміңіз тоқтап қалды, мекенжайды растау керек.' : 'Здравствуйте! Ваша посылка задержана, нужно подтвердить адрес.',
