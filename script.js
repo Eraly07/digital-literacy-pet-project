@@ -266,7 +266,7 @@ async function renderLB(){
               <div>${r.name || (lang==='kk'?'Аноним':'Аноним')}</div>
               ${r.course?`<div class="lbsub">${r.course}</div>`:''}
             </div>
-            <div class="lbsc">${r.s}%</div>
+            <div class="lbsc">${r.s} ${lang==='kk'?'балл':'балл'}</div>
             <div class="lbdt">${r.d}</div>
           </div>`).join('');
         return;
@@ -1005,7 +1005,7 @@ function renderFinalQuestion(courseId){
       :(lang==='kk'?'70% жинай алмадыңыз. Материалды қайталап, қайта тапсырыңыз.':'Не набрано 70%. Повторите материал и попробуйте снова.');
     if(pass && !f.submitted){
       f.submitted=true;
-      submitFinalScore(c,pct);
+      submitFinalScore(c,f.score,total);
     }
     box.innerHTML=`
       <div style="text-align:center;padding:1rem 0">
@@ -1016,7 +1016,7 @@ function renderFinalQuestion(courseId){
           <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
           <div class="cert-nm">${pName||'Anonymous'}</div>
           <div class="cert-sub">${lang==='kk'?'Курсты аяқтады':'Завершил курс'}: ${c.title}</div>
-          <div class="cert-sc">${pct}%</div>
+          <div class="cert-sc">${f.score*2} ${lang==='kk'?'балл':'баллов'} / ${total*2}</div>
         </div>
         <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${pct},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
         <button class="gbtn-outline" onclick="resetFinalTest('${c.id}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
@@ -1086,8 +1086,10 @@ function resetFinalTest(courseId){
   renderFinalQuestion(courseId);
 }
 
-function submitFinalScore(course,pct){
-  addBoard(pName,pct,course.id,course.title);
+function submitFinalScore(course,rawScore,total){
+  // Әр дұрыс жауап = 2 балл
+  const points = rawScore * 2;
+  addBoard(pName, points, course.id, course.title);
 }
 
 // ========== QUIZ (10 сұрақ) ==========
