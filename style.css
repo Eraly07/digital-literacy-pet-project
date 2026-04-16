@@ -837,6 +837,25 @@ body::after{
   margin: 0 auto;
 }
 
+.course-grid-outer {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 960px) {
+  .course-grid-outer {
+    grid-template-columns: 340px minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.quiz-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.3rem;
+}
+
 .course-hero {
   background: var(--card2);
   border: 1px solid var(--border);
