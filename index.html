@@ -1,1528 +1,254 @@
-// ═══════════════════════════════
-// CONFIG
-// ═══════════════════════════════
-const AI_API_ENDPOINT = normalizeAiEndpoint(
-  window.AI_API_ENDPOINT ||
-  document.querySelector('meta[name="ai-endpoint"]')?.content ||
-  '/api/ai'
-);
-const AI_ANALYZE_ENDPOINT = toAnalyzeEndpoint(AI_API_ENDPOINT);
-const AI_SCORES_ENDPOINT = AI_API_ENDPOINT.replace(/\/api\/ai\/?$/i, '/api/scores');
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="ai-endpoint" content="https://ppp-h9xn.onrender.com/api/ai">
+<title>ЦифрСауат</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-const AUTH_BASE = (() => {
-  const ai = AI_API_ENDPOINT;
-  if (/^https?:\/\//i.test(ai)) {
-    return ai.replace(/\/api\/ai\/?$/i, '');
-  }
-  return '';
-})();
+<canvas id="particles"></canvas>
 
-function normalizeAiEndpoint(v){
-  const s=(v??'').toString().trim();
-  if(!s) return '/api/ai';
-  if(/^https?:\/\//i.test(s)){
-    try{
-      const u=new URL(s);
-      if(!u.pathname || u.pathname==='/') u.pathname='/api/ai';
-      if(u.pathname.endsWith('/')) u.pathname=u.pathname.replace(/\/+$/,'');
-      return u.toString().replace(/\/$/,'');
-    }catch(_){ return s; }
-  }
-  return s;
-}
-
-function toAnalyzeEndpoint(ai){
-  const s=(ai??'').toString().trim();
-  if(!s) return '/api/analyze';
-  if(/\/api\/ai\/?$/i.test(s)) return s.replace(/\/api\/ai\/?$/i,'/api/analyze');
-  return s.replace(/\/+$/,'') + '/api/analyze';
-}
-
-async function fetchWithRetry(url, options, retries=3){
-  if(!options) options = {};
-  if(!options.headers) options.headers = {};
-  if(currentToken) options.headers['Authorization'] = `Bearer ${currentToken}`;
-  for(let i=0;i<retries;i++){
-    try{
-      const res=await fetch(url,options);
-      if(res.ok) return res;
-      if((res.status===502||res.status===503) && i<retries-1){
-        await new Promise(r=>setTimeout(r,1500));
-        continue;
-      }
-      return res;
-    }catch(e){
-      if(i===retries-1) throw e;
-      await new Promise(r=>setTimeout(r,1500));
-    }
-  }
-}
-
-// PARTICLES
-(function(){
-  const c=document.getElementById('particles');
-  const x=c.getContext('2d');
-  let W,H,pts=[];
-  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
-  function init(){
-    pts=[];
-    const n=Math.floor(W*H/18000);
-    for(let i=0;i<n;i++) pts.push({
-      x:Math.random()*W,y:Math.random()*H,
-      vx:(Math.random()-.5)*.25,vy:(Math.random()-.5)*.25,
-      r:Math.random()*1.5+.5,
-      a:Math.random()*.5+.1
-    });
-  }
-  function draw(){
-    x.clearRect(0,0,W,H);
-    pts.forEach(p=>{
-      p.x+=p.vx;p.y+=p.vy;
-      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
-      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
-      x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);
-      x.fillStyle=`rgba(0,240,200,${p.a})`;x.fill();
-    });
-    for(let i=0;i<pts.length;i++){
-      for(let j=i+1;j<pts.length;j++){
-        const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y;
-        const d=Math.sqrt(dx*dx+dy*dy);
-        if(d<120){
-          x.beginPath();
-          x.moveTo(pts[i].x,pts[i].y);x.lineTo(pts[j].x,pts[j].y);
-          x.strokeStyle=`rgba(0,240,200,${0.06*(1-d/120)})`;
-          x.lineWidth=.5;x.stroke();
-        }
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-  resize();init();draw();
-  window.addEventListener('resize',()=>{resize();init();});
-})();
-
-// NAV
-function go(id){
-  const cur=document.querySelector('.page.active');
-  if(cur && cur.id!==id){
-    cur.classList.add('leaving');
-    setTimeout(()=>{ cur.classList.remove('active','leaving'); },180);
-  } else if(cur) cur.classList.remove('active');
-  setTimeout(()=>{
-    const next=document.getElementById(id);
-    next.classList.add('active');
-    animatePage(id);
-    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll(`.nav-item[onclick="go('${id}')"]`).forEach(b=>b.classList.add('active'));
-    document.getElementById(id).scrollTop=0;
-    if(id==='lb') renderLB();
-    if(id==='courses') renderCoursesList();
-    if(id==='quiz') renderCourseView();
-  }, cur && cur.id!==id ? 150 : 0);
-}
-
-function animatePage(id){
-  const pg=document.getElementById(id);
-  const ph=pg.querySelector('.ph');
-  if(ph){ ph.classList.remove('visible'); void ph.offsetWidth; ph.classList.add('visible'); }
-  const items=pg.querySelectorAll('.ncard, .tip-row, .hcard, .citem, .course-card');
-  items.forEach((el,i)=>{ el.classList.remove('visible'); void el.offsetWidth; setTimeout(()=>el.classList.add('visible'),i*70); });
-}
-
-// LANG
-let lang='kk';
-function toggleLang(){
-  lang=lang==='kk'?'ru':'kk';
-  const l2=document.getElementById('langLabel'); if(l2) l2.textContent=lang==='kk'?'Русский':'Қазақша';
-  const m=document.getElementById('lb3'); if(m) m.textContent=lang==='kk'?'RU':'ҚЗ';
-  document.querySelectorAll('[data-kk]').forEach(el=>{
-    const v=lang==='kk'?el.getAttribute('data-kk'):el.getAttribute('data-ru');
-    if(!v) return;
-    if(el.tagName==='TEXTAREA'||el.tagName==='INPUT') el.placeholder=v;
-    else el.innerHTML=v;
-  });
-  updateChipsAdv();
-  renderLB();
-  renderCoursesList();
-  renderCourseView();
-  renderSimScenarioOptions();
-}
-
-// AUTH
-let pName = '';
-let currentToken = localStorage.getItem('token') || '';
-
-async function login(username, password) {
-  const err = document.getElementById('authError');
-  err.textContent = '';
-  if(!username || !password) { err.textContent = lang==='kk' ? 'Логин және пароль қажет' : 'Логин и пароль обязательны'; return; }
-  let resp;
-  let data = {};
-  try {
-    resp = await fetch(AUTH_BASE + '/api/auth/login', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username, password})
-    });
-    data = await resp.json().catch(() => ({}));
-  } catch (e) {
-    err.textContent = e?.message || (lang==='kk' ? 'Сервер қатесі' : 'Ошибка сервера');
-    return;
-  }
-  if(!resp.ok) { err.textContent = data.error || (lang==='kk' ? 'Кіру қатесі' : 'Ошибка входа'); return; }
-  currentToken = data.token;
-  pName = data.username;
-  localStorage.setItem('token', currentToken);
-  document.getElementById('authModal').classList.remove('on');
-  document.getElementById('logoutBtn').style.display = 'flex';
-  loadUserProgress();
-  renderCoursesList();
-  renderCourseView();
-  renderLB();
-}
-
-async function register(username, password) {
-  const err = document.getElementById('regError');
-  err.textContent = '';
-  if(!username || !password) { err.textContent = lang==='kk' ? 'Логин және пароль қажет' : 'Логин и пароль обязательны'; return; }
-  if(username.length < 3 || username.length > 24) { err.textContent = lang==='kk' ? '3-24 символ' : '3-24 символа'; return; }
-  if(password.length < 4) { err.textContent = lang==='kk' ? 'Кемінде 4 символ' : 'Минимум 4 символа'; return; }
-  let resp;
-  let data = {};
-  try {
-    resp = await fetch(AUTH_BASE + '/api/auth/register', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({username, password})
-    });
-    data = await resp.json().catch(() => ({}));
-  } catch (e) {
-    err.textContent = e?.message || (lang==='kk' ? 'Сервер қатесі' : 'Ошибка сервера');
-    return;
-  }
-  if(!resp.ok) { err.textContent = data.error || (lang==='kk' ? 'Тіркелу қатесі' : 'Ошибка регистрации'); return; }
-  currentToken = data.token;
-  pName = data.username;
-  localStorage.setItem('token', currentToken);
-  document.getElementById('authModal').classList.remove('on');
-  document.getElementById('logoutBtn').style.display = 'flex';
-  loadUserProgress();
-  renderCoursesList();
-  renderCourseView();
-  renderLB();
-}
-
-async function logout() {
-  currentToken = '';
-  pName = '';
-  localStorage.removeItem('token');
-  document.getElementById('authModal').classList.add('on');
-  document.getElementById('logoutBtn').style.display = 'none';
-  Object.keys(courseState).forEach(k => delete courseState[k]);
-  renderCoursesList();
-  renderCourseView();
-}
-
-async function loadUserProgress() {
-  if(!currentToken) return;
-  const resp = await fetch('/api/user/progress', { headers:{'Authorization':`Bearer ${currentToken}`} }).catch(()=>null);
-  if(!resp || !resp.ok) return;
-  const data = await resp.json().catch(()=>({}));
-  if(data.progress) {
-    for(const [cid, prog] of Object.entries(data.progress)) {
-      if(!courseState[cid]) courseState[cid] = prog;
-      else Object.assign(courseState[cid], prog);
-    }
-    renderCourseView();
-  }
-}
-
-async function saveUserProgress() {
-  if(!currentToken) return;
-  await fetch('/api/user/progress', {
-    method:'POST',
-    headers:{'Content-Type':'application/json', 'Authorization':`Bearer ${currentToken}`},
-    body:JSON.stringify({progress: courseState})
-  }).catch(()=>{});
-}
-
-// LEADERBOARD
-let board=[]; // local fallback not used, kept for future if needed
-let pendingScore=null;
-function addBoard(name,score,courseId,courseTitle){
-  if(!currentToken) return Promise.resolve(); // Авторизация істемесе - ештеңе істемеу
-  return fetch(AI_SCORES_ENDPOINT,{
-    method:'POST',
-    headers:{'Content-Type':'application/json', 'Authorization':`Bearer ${currentToken}`},
-    body:JSON.stringify({name,score,type:courseId,course:courseTitle})
-  }).then(()=>renderLB()).catch(()=>{});
-}
-async function renderLB(){
-  const el=document.getElementById('lbb');
-  if(el) el.innerHTML=`<div style="color:var(--muted);font-size:.8rem;padding:.5rem">${lang==='kk'?'Жүктелуде...':'Загрузка...'}</div>`;
-  try{
-    const res=await fetch(AI_SCORES_ENDPOINT).catch(()=>null);
-    if(res && res.ok){
-      const data=await res.json().catch(()=>null);
-      const scores=data?.scores || [];
-      if(scores.length>0){
-        const M=['🥇','🥈','🥉'],C=['g','s','b'];
-        el.innerHTML=scores.slice(0,20).map((r,i)=>`
-          <div class="lbrow">
-            <div class="lbrank ${C[i]||''}">${M[i]||i+1}</div>
-            <div class="lbname">
-              <div>${r.name || (lang==='kk'?'Аноним':'Аноним')}</div>
-              ${r.course?`<div class="lbsub">${r.course}</div>`:''}
-            </div>
-            <div class="lbsc">${r.s}</div>
-            <div class="lbdt">${r.d}</div>
-          </div>`).join('');
-        return;
-      }
-    }
-  }catch{}
-  if(el) el.innerHTML=`<div style="color:var(--muted);font-size:.8rem;padding:.5rem">${lang==='kk'?'Рейтинг бос немесе сервер қолжетімсіз':'Рейтинг пуст или сервер недоступен'}</div>`;
-}
-
-// ═══════════════════════════════
-// COURSES + FINAL TEST
-// ═══════════════════════════════
-const COURSE_DATA=[
-  {
-    id:'phishing',
-    title:'Фишинг және алаяқтық',
-    desc:'Фишинг түрлері, күмәнді белгілер және қауіпсіз әрекеттер.',
-    modules:[
-      {
-        title:'Фишинг деген не?',
-        lead:'Фишинг — сенімді ұйым болып көрініп, жеке дерек немесе ақша сұрайтын алаяқтық.',
-        points:[
-          'Асықтыру мен қорқыту — күдікті белгі.',
-          'Күдікті сілтеме мен қате доменге назар аудар.',
-          'Бейтаныс файлды ашпа.'
-        ],
-        quiz:[
-          {q:'Фишинг деген не?',o:['Интернеттегі ойын','Сенімді ұйым болып көрініп дерек немесе ақша сұрау','Компьютерді тездету','Вирусты жою әдісі'],a:1,e:'Фишингтің мақсаты — дерек немесе ақша алу.'},
-          {q:'Хаттағы ең қауіпті белгі қандай?',o:['Сәлемдесу','Жедел әрекет етуге қысым','Ұзын мәтін','Логотип'],a:1,e:'Асықтыру мен қысым — фишингтің жиі белгісі.'},
-          {q:'Сілтемені тексерудің дұрыс жолы',o:['Бірден басу','Нақты доменді қарап алу','Тек қысқа URL-ға сену','Достарға жіберу'],a:1,e:'Алдымен нақты доменді тексер.'}
-        ]
-      },
-      {
-        title:'Тексеру әдеттері',
-        lead:'Кез келген сұранысты ресми арна арқылы тексер. Күмән туғанда тоқтаған дұрыс.',
-        points:[
-          'Банк SMS‑кодты ешқашан сұрамайды.',
-          'Күмәнді қоңырауды тоқтатып, ресми нөмірге өзің қоңырау шал.',
-          'Қысқартылған сілтемелерді ашпа.'
-        ],
-        quiz:[
-          {q:'Банк SMS‑кодты сұрай ма?',o:['Иә, әрқашан','Жоқ, банк код сұрамайды','Тек түнде','Тек чатта'],a:1,e:'Банк SMS‑кодты сұрамайды.'},
-          {q:'Қауіпсіздік қызметі қысым жасаса не істеу керек?',o:['Барлығын айтып беру','Қоңырауды тоқтатып, ресми нөмірге өзің хабарласу','SMS код жіберу','Ақша аудару'],a:1,e:'Ресми арнамен өзің қайта тексер.'},
-          {q:'Қысқартылған сілтеме келгенде',o:['Бірден ашу','Тексермей ашпау','Барлығына тарату','Пароль енгізу'],a:1,e:'Қысқартылған URL күдікті болуы мүмкін.'}
-        ]
-      },
-      {
-        title:'Әрекет және қорғаныс',
-        lead:'Қауіп байқалса — тез әрекет ет. Қауіпсіздік әдеттері тұрақты болуы керек.',
-        points:[
-          'Құпиясөзді ауыстыр және 2FA қос.',
-          'Күмәнді файл/сілтемені ашпа.',
-          'Қажет болса банкке хабарлас.'
-        ],
-        quiz:[
-          {q:'Күдікті файл келсе дұрыс әрекет',o:['Ашпай, жою','Антивируссыз ашу','Достарға жіберу','Көшіру'],a:0,e:'Күмәнді файлды ашпа.'},
-          {q:'Қауіпті сілтемені ашып қойсаң',o:['Ештеңе істемеу','Құпиясөзді ауыстыру','Карта деректерін енгізу','Қайта басу'],a:1,e:'Құпиясөзді ауыстырып, аккаунтты тексер.'},
-          {q:'2FA не үшін керек?',o:['Әдемі болу','Қосымша қорғаныс','Интернет жылдамдату','Жарнама көру'],a:1,e:'2FA аккаунтты күшейтеді.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Фишингтен қорғанудың ең дұрыс қадамы қайсы?',o:['Кодты жіберу','Ресми арнамен өзің қайта тексеру','Сілтемені ашу','Барлығын жариялау'],a:1,e:'Тек ресми арнаны пайдалан.'}
-    ]
-  },
-  {
-    id:'passwords',
-    title:'Пароль қауіпсіздігі',
-    desc:'Күшті пароль, 2FA және қауіпсіз сақтау әдеттері.',
-    modules:[
-      {
-        title:'Күшті пароль жасау',
-        lead:'Қауіпсіз пароль ұзын, бірегей және болжанбайтын болуы керек.',
-        points:[
-          '12+ символ, әріп/сан/белгі қолдан.',
-          'Әр аккаунтқа бөлек пароль қой.',
-          'Passphrase — есте сақталатын ұзын сөйлем.'
-        ],
-        quiz:[
-          {q:'Күшті пароль қандай?',o:['Қысқа сөз','12+ символ, әріп/сан/белгі','Туған күн','Атыңыз'],a:1,e:'Ұзын әрі күрделі пароль қауіпсіз.'},
-          {q:'Бір парольді қайталау несімен қауіпті?',o:['Қауіпсіз','Біреуі бұзылса бәрі бұзылады','Ұсынылады','Тек банкте'],a:1,e:'Бір пароль бұзылса, барлық аккаунт ашылады.'},
-          {q:'Passphrase деген не?',o:['Ұзын есте сақталатын сөйлем','4 сан','Туған күн','Лақап ат'],a:0,e:'Ұзын сөйлем қауіпсіз әрі есте қалады.'}
-        ]
-      },
-      {
-        title:'Сақтау және менеджер',
-        lead:'Парольді қауіпсіз сақтау үшін менеджер қолданған дұрыс.',
-        points:[
-          'Менеджер парольді шифрлап сақтайды.',
-          'Құпиясөзді чатқа немесе стикерге жазба.',
-          'Breach сервистерінен паролің шыққан‑шықпағанын тексер.'
-        ],
-        quiz:[
-          {q:'Пароль менеджердің артықшылығы',o:['Құпиясөзді ашық сақтайды','Шифрланған түрде сақтайды','Хатқа жібереді','Бәрін бірдей етеді'],a:1,e:'Менеджер деректі шифрлап сақтайды.'},
-          {q:'Парольді қайда сақтау дұрыс емес?',o:['Менеджерде','Қағазда үстелде','Қауіпсіз сейфте','Authenticator қосымшада'],a:1,e:'Көрінетін жерде сақтау — қауіп.'},
-          {q:'Бұзылған парольді қалай білеміз?',o:['Достардан','Провайдерден','Breach тексеру сервистерінен','VPN арқылы'],a:2,e:'Breach сервистері паролі ағып кеткенін көрсетеді.'}
-        ]
-      },
-      {
-        title:'2FA және құрылғы',
-        lead:'Қосымша қорғаныс пен құрылғы қауіпсіздігі аккаунтты сақтайды.',
-        points:[
-          '2FA қосу — негізгі қорғаныс.',
-          'Authenticator көбіне SMS‑тен қауіпсіз.',
-          'Құрылғыны құлыптап, жүйені жаңартып отыр.'
-        ],
-        quiz:[
-          {q:'2FA деген не?',o:['Екі қадамды қорғау','Екі парольді бірге қолдану','Wi‑Fi жылдамдату','Антивирус'],a:0,e:'2FA — қосымша растау коды.'},
-          {q:'SMS пен authenticator салыстырмасында',o:['SMS қауіпсіз','Authenticator қауіпсіз','Екеуі бірдей','Екеуі қауіпті'],a:1,e:'Authenticator әдетте қауіпсізірек.'},
-          {q:'Құлып экранының рөлі',o:['Қажет емес','Қорғаныстың базалық бөлігі','Тек компьютерге','Тек балаларға'],a:1,e:'Құлып экраны — базалық қорғаныс.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Парольді біреуге беру туралы дұрыс жауап',o:['Қауіпсіз','Тек жақындарға болады','Беруге болмайды','Чатта жіберуге болады'],a:2,e:'Құпиясөзді ешкімге берме.'}
-    ]
-  },
-  {
-    id:'social',
-    title:'Әлеуметтік желі қауіпсіздігі',
-    desc:'Құпиялық баптауы, қауіптер және аккаунтты қорғау.',
-    modules:[
-      {
-        title:'Құпиялық баптауы',
-        lead:'Профильді ашық қалдырма. Жеке деректерді барынша шектеңіз.',
-        points:[
-          'Профильді достарға ғана көрсет.',
-          'Телефон, мекенжай, ИИН сияқты деректерді жариялама.',
-          'Геолокацияны қажет болмаса өшір.'
-        ],
-        quiz:[
-          {q:'Құпиялық баптауының дұрыс нұсқасы',o:['Барлығына ашық','Достарға ғана','Белгісізге ашық','Жабық қажет емес'],a:1,e:'Көбіне достарға ғана қолжетімді болуы дұрыс.'},
-          {q:'Геолокация туралы дұрыс тұжырым',o:['Қауіпсіз','Үй/орынды көрсетуі мүмкін, абайлау керек','Тек ойын','Тек фото сапасы'],a:1,e:'Геолокация жеке орынға қауіп төндіруі мүмкін.'},
-          {q:'Профильде қандай дерек қауіпті?',o:['Жалпы қала','ИИН/карта/құпия дерек','Хобби','Қызығушылық'],a:1,e:'Құпия деректерді жариялама.'}
-        ]
-      },
-      {
-        title:'Алаяқтар және фейк аккаунт',
-        lead:'Әлеуметтік желіде алаяқтар жиі кездеседі. Әрбір хабарламаны тексер.',
-        points:[
-          'DM‑дегі сілтемелерге сақ бол.',
-          'Giveaway және ұтыс хабарларын ресми аккаунттан тексер.',
-          'Бөгде friend request болса — профильді қарап ал.'
-        ],
-        quiz:[
-          {q:'DM‑дегі сілтеме келгенде',o:['Бірден ашу','Жіберушіні тексеру','Барлығына тарату','Пароль енгізу'],a:1,e:'Алдымен кім жібергенін тексер.'},
-          {q:'Giveaway ұтысы туралы хабар',o:['Әрқашан шынайы','Ресми аккаунтты тексеру керек','Қатынаса беру','Дереу ақша жіберу'],a:1,e:'Ресми аккаунттан ғана сенімді.'},
-          {q:'Бөгде адамнан friend request келсе',o:['Қабылдау','Профиль тексеріп, қажет болмаса қабылдамау','Қайтару','Сілтеме сұрау'],a:1,e:'Бөгдені тексеріп, қажет болмаса қабылдама.'}
-        ]
-      },
-      {
-        title:'Қалпына келтіру және бақылау',
-        lead:'Аккаунт қауіпсіздігін сақтау үшін 2FA және сессия бақылауын қолдан.',
-        points:[
-          '2FA қосып қой.',
-          'Белгісіз сессияны тоқтат.',
-          'Қалпына келтіру email/телефонды жаңартып отыр.'
-        ],
-        quiz:[
-          {q:'Белгісіз сессия көрсең',o:['Маңызды емес','Сессияны тоқтату','Барлығын қалдыру','Басқаға беру'],a:1,e:'Белгісіз құрылғыны шығарып таста.'},
-          {q:'Қалпына келтіру email/телефон',o:['Маңызды','Маңызы жоқ','Тек уақытша','Тек ойын'],a:0,e:'Қалпына келтіру деректері маңызды.'},
-          {q:'Қосылған қолданбалар',o:['Тексермей қалдыру','Артықтарын өшіру','Барлығына рұқсат беру','Жоюға болмайды'],a:1,e:'Артық қолданбаларды өшір.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Қорлау/қысым болса дұрыс әрекет',o:['Жауап беру','Блоктау және шағымдану','Елемеу','Өзің де қорлау'],a:1,e:'Блоктап, шағымдану дұрыс.'}
-    ]
-  },
-  {
-    id:'fake',
-    title:'Жалған ақпарат (Фейк)',
-    desc:'Фейкті тану, фактчек және саналы бөлісу.',
-    modules:[
-      {
-        title:'Фейк белгілері',
-        lead:'Фейк жаңалықтар эмоцияға әсер етуге және тез таралуға тырысады.',
-        points:[
-          'Айқайлы тақырып пен эмоцияға қысым — белгі.',
-          'Дәлел, дереккөз жоқ болса — күмәнді.',
-          'Мәтіндегі асығыстық — манипуляция.'
-        ],
-        quiz:[
-          {q:'Фейктің жиі белгісі',o:['Эмоцияға қысым','Ресми құжат','Нақты дереккөз','Сілтемесі бар материал'],a:0,e:'Эмоцияға қысым — фейктің белгісі.'},
-          {q:'Кликбейт деген не?',o:['Нақты ақпарат','Адамды басуға итермелейтін тақырып','Ресми белгі','Фактчек'],a:1,e:'Кликбейт эмоцияға ойнайды.'},
-          {q:'Жалған ақпаратты бірден тарату',o:['Дұрыс','Алдымен тексеру керек','Ұсынылады','Тек достарға'],a:1,e:'Алдымен тексер, содан кейін ғана бөліс.'}
-        ]
-      },
-      {
-        title:'Фактчек қадамдары',
-        lead:'Ақпаратты бірнеше дереккөзден тексеру — негізгі ереже.',
-        points:[
-          'Дереккөзді және авторды тексер.',
-          'Дата мен контекстке назар аудар.',
-          'Суретті кері іздеу арқылы тексер.'
-        ],
-        quiz:[
-          {q:'Ақпаратты қалай тексереміз?',o:['Барлығына сену','2-3 дереккөзден тексеру','Тек бір блог','Тек комментарий'],a:1,e:'Бірнеше дереккөзді салыстыр.'},
-          {q:'Дереккөзді тексеру',o:['Кездейсоқ чат','Ресми/беделді дереккөз','Тек мем','Тек пікір'],a:1,e:'Ресми дереккөзге сүйен.'},
-          {q:'Суретті тексеру тәсілі',o:['Қайта жүктеу','Reverse image search','Сүзгі қою','Кесіп тастау'],a:1,e:'Кері іздеу суреттің түпнұсқасын табады.'}
-        ]
-      },
-      {
-        title:'Саналы бөлісу және deepfake',
-        lead:'Deepfake пен манипуляцияны тану үшін сыни ойлау қажет.',
-        points:[
-          'Контекст бұрмаланса — фейк туады.',
-          'Deepfake‑те дыбыс/ерін сәйкессіз болуы мүмкін.',
-          'Алгоритмдер қызығушылыққа сай контент береді.'
-        ],
-        quiz:[
-          {q:'Deepfake белгісі',o:['Барлығы үйлесімді','Жарық/ерін қозғалысы сәйкес емес','HD сапа','Ресми аккаунт'],a:1,e:'Техникалық сәйкессіздік — белгі.'},
-          {q:'Дата/контекст неге маңызды?',o:['Маңызды емес','Ескі жаңалық жаңаша көрінуі мүмкін','Тек сурет','Тек пікір'],a:1,e:'Контекст бұрмаланса — фейк туады.'},
-          {q:'Алгоритмдер туралы дұрыс',o:['Тек шындықты көрсетеді','Қызығушылыққа сай контент береді','Әрдайым тең','Тек білім'],a:1,e:'Алгоритмдер қызығушылыққа бейімделеді.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Фейк көрсең не істеу керек?',o:['Дереу тарату','Тексеріп, қажет болса шағымдану','Пікір жазу','Қорқыту'],a:1,e:'Тексеру және шағым — дұрыс жол.'}
-    ]
-  },
-  {
-    id:'privacy',
-    title:'Жеке деректерді қорғау',
-    desc:'Дерек түрлері, рұқсаттар және қауіп туғанда әрекет.',
-    modules:[
-      {
-        title:'Жеке дерек деген не?',
-        lead:'Жеке деректер — сізді анықтайтын мәліметтер. Оларды тек қажет жағдайда ғана беріңіз.',
-        points:[
-          'ИИН, паспорт, телефон, адрес — жеке дерек.',
-          'Дерек минимизациясы: тек қажет ақпаратты ғана бер.',
-          'Қоғамдық Wi‑Fi‑да абай бол.'
-        ],
-        quiz:[
-          {q:'Жеке дерекке не жатады?',o:['Кездейсоқ ник','ИИН/паспорт/телефон','Мем','Жаңалық'],a:1,e:'ИИН, паспорт, телефон — жеке дерек.'},
-          {q:'Дерек минимизациясы',o:['Артық дерек беру','Тек қажет деректі беру','Кез келген формаға беру','Құпиясөзді беру'],a:1,e:'Тек қажет деректі ғана бер.'},
-          {q:'Қоғамдық Wi‑Fi‑да дұрыс әрекет',o:['Банкке кіру','VPN қолдану немесе абай болу','Құпиясөз жіберу','Файлдарды ашу'],a:1,e:'Қоғамдық Wi‑Fi‑да қауіп жоғары.'}
-        ]
-      },
-      {
-        title:'Рұқсаттар және келісім',
-        lead:'Қосымша рұқсаттарын бақылап, келісім мәтінін қарап шығу қажет.',
-        points:[
-          'Артық рұқсат берме.',
-          'Келісім мәтінінде қандай дерек жиналатынын қара.',
-          'Деректі өшіру құқығы бар.'
-        ],
-        quiz:[
-          {q:'Қосымша рұқсаттары',o:['Барлығын беру','Тек қажеттісін беру','Мүлдем бермеу','GPS-ті әрқашан беру'],a:1,e:'Артық рұқсат — қауіп.'},
-          {q:'Келісім мәтіні',o:['Оқымай келісу','Нені жинайтынын қарау','Құпиясөз жазу','Скриншот'],a:1,e:'Кемі негізгі тармақтарды қарап шық.'},
-          {q:'Деректі өшіру құқығы',o:['Жоқ','Бар, сұрау жіберуге болады','Тек банкке','Тек мектепке'],a:1,e:'Сервистен деректі жоюды сұрауға болады.'}
-        ]
-      },
-      {
-        title:'Қауіп кезінде әрекет',
-        lead:'Қауіп байқалса — жедел әрекет ету керек.',
-        points:[
-          'Құрылғы жоғалса — қашықтан бұғатта.',
-          'Фишинг болса — дерек бермей, ресми арнадан тексер.',
-          'Leak болса — құпиясөзді ауыстыр.'
-        ],
-        quiz:[
-          {q:'Құрылғы жоғалса не істеу керек?',o:['Ештеңе істемеу','Қашықтан бұғаттау/өшіру','SIM-ді ашық қалдыру','Парольді жазу'],a:1,e:'Remote lock/erase — ең дұрыс қадам.'},
-          {q:'Фишинг дерек сұраса',o:['Беріп жіберу','Бермеу және тексеру','SMS код жіберу','Карта деректерін айту'],a:1,e:'Деректі бермей, ресми арнадан тексер.'},
-          {q:'Leak болғанда не істеу керек?',o:['Ештеңе істемеу','Парольді ауыстыру, банкке хабарлау','Барлығын жариялау','Қайта қолдану'],a:1,e:'Жедел әрекет — қауіптің алдын алады.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Құжат фотосын чатқа жіберу туралы дұрыс жауап',o:['Қауіпсіз','Қауіпті, тек ресми арнамен','Әрқашан болады','Тек түнде'],a:1,e:'Құжатты тек ресми арнамен жібер.'}
-    ]
-  },
-  {
-    id:'bullying',
-    title:'Кибербуллинг және этика',
-    desc:'Онлайн қысымнан қорғану және дұрыс этикалық мінез.',
-    modules:[
-      {
-        title:'Кибербуллинг түрлері',
-        lead:'Кибербуллинг — онлайн қысым мен қорлау. Оны елемеу емес, дұрыс әрекет маңызды.',
-        points:[
-          'Қорлау, қоқан‑лоқы, доксинг — кибербуллинг түрлері.',
-          'Әлеуметтік желіде де қауіп болуы мүмкін.',
-          'Қауіп төнсе — дәлел жина.'
-        ],
-        quiz:[
-          {q:'Кибербуллинг деген не?',o:['Онлайн қорлау/қысым','Ойын','Жарнама','Құпия'],a:0,e:'Кибербуллинг — онлайн қысым.'},
-          {q:'Доксинг деген не?',o:['Ойын','Жеке деректерді жариялау','Жарнама','Қорғау'],a:1,e:'Доксинг — жеке деректерді жариялау.'},
-          {q:'Қорлау/қысым болса дұрыс әрекет',o:['Жауап беру','Блоктау және шағымдану','Елемеу','Өзің де қорлау'],a:1,e:'Блоктап, шағымдану дұрыс.'}
-        ]
-      },
-      {
-        title:'Қорғану және көмек',
-        lead:'Қорғану үшін дәлел жинап, көмек сұрау маңызды.',
-        points:[
-          'Скриншот жасап дәлел сақта.',
-          'Платформаға шағымдан.',
-          'Сенімді ересекке немесе досқа айт.'
-        ],
-        quiz:[
-          {q:'Дәлелді қалай сақтаймыз?',o:['Скриншот сақтау','Жою','Қорқыту','Тарату'],a:0,e:'Скриншот — негізгі дәлел.'},
-          {q:'Көмек сұрау',o:['Ешкімге айтпау','Сенімді ересекке айту','Тек форум','Жауап беру'],a:1,e:'Сенімді адамға айту маңызды.'},
-          {q:'Бақылаушы рөлі',o:['Қолдау көрсету және хабарлау','Қорлауға қосылу','Күлкі ету','Көру'],a:0,e:'Бақылаушы да көмектесе алады.'}
-        ]
-      },
-      {
-        title:'Онлайн этика',
-        lead:'Әдеп пен құрмет — қауіпсіз орта құрудың негізі.',
-        points:[
-          'Авторлық құқықты сыйла.',
-          'Рұқсатсыз фото/контент таратпа.',
-          'Топ чатта спам жасама.'
-        ],
-        quiz:[
-          {q:'Авторлық құқық туралы дұрыс тұжырым',o:['Қажет емес','Рұқсатсыз пайдалану заңсыз','Тек мектепте','Тек ойын'],a:1,e:'Авторлық құқықты сақтау керек.'},
-          {q:'Жеке шекара',o:['Рұқсатсыз фото жариялау','Рұқсат сұрау','Тек өзім','Міндетті емес'],a:1,e:'Рұқсат сұрау — дұрыс.'},
-          {q:'Топ чат этикасы',o:['Барлығын тегімен белгілеу','Артық спам жасамау','Қорлау','Қауесет'],a:1,e:'Артық спам жасамау керек.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'Қауіп төнсе ең дұрыс әрекет',o:['Кек алу','Бұғаттау, дәлел, хабарлау','Профильді өшіру және үнсіз','Барлығын жіберу'],a:1,e:'Қауіп болса — бұғаттап, хабарла.'}
-    ]
-  },
-  {
-    id:'ai',
-    title:'AI сауаттылығы',
-    desc:'AI мүмкіндігі, шектеуі және қауіпсіз қолдану.',
-    modules:[
-      {
-        title:'AI негіздері',
-        lead:'AI жауаптары қате болуы мүмкін. Сондықтан сыни ойлау маңызды.',
-        points:[
-          'AI әрқашан дұрыс жауап бермейді.',
-          'Bias — дерекке байланысты қисайу.',
-          'Жауапты міндетті түрде тексер.'
-        ],
-        quiz:[
-          {q:'AI жауаптары туралы дұрыс тұжырым',o:['Әрқашан дұрыс','Қате болуы мүмкін','Құжат','Заң'],a:1,e:'AI қателесуі мүмкін.'},
-          {q:'Bias деген не?',o:['Жоқ нәрсе','Дерекке байланысты қисайу','Тек ойын','Тек мәтін'],a:1,e:'Bias — дерекке тәуелді қисайу.'},
-          {q:'Модель сенімділігі туралы',o:['Әрқашан бірдей','Жауап өзгеруі мүмкін','Жоқ','Тек офлайн'],a:1,e:'Модель жаңартылса жауап өзгереді.'}
-        ]
-      },
-      {
-        title:'Қауіпсіз пайдалану',
-        lead:'AI‑ды қауіпсіз қолдану үшін жеке деректерді қорғаңыз.',
-        points:[
-          'Жеке дерек енгізбе немесе маскала.',
-          'AI‑ды көмекші ретінде пайдалан.',
-          'Нақты промпт жақсы жауап береді.'
-        ],
-        quiz:[
-          {q:'Жеке дерек енгізу',o:['Қорықпай енгізу','Енгізбеу немесе маскалау','Тек пароль','Тек карта'],a:1,e:'Жеке деректі енгізбе.'},
-          {q:'AI‑ды қолдану тәсілі',o:['Толық тапсырманы көшіріп беру','Көмекші ретінде пайдалану','Мүлдем қолданбау','Тек емтиханда'],a:1,e:'AI — көмекші.'},
-          {q:'Жақсы промпт',o:['Түсініксіз','Нақты және контекстті','Бос','Тек код'],a:1,e:'Нақты промпт жақсы жауап береді.'}
-        ]
-      },
-      {
-        title:'Жауапкершілік',
-        lead:'AI жауаптарын тексеру және жауапкершілікпен қолдану қажет.',
-        points:[
-          'Дереккөз көрсетіп, тексер.',
-          'Плагиатқа жол берме.',
-          'Жоғары тәуекелде адам тексеруі керек.'
-        ],
-        quiz:[
-          {q:'Плагиатқа қатысты дұрыс жауап',o:['AI мәтінін сол күйі тапсыру','Дереккөз көрсету және өз сөзіңмен өңдеу','Ештеңе қажет емес','Тек көшіріп алу'],a:1,e:'Өз сөзіңмен өңдеу қажет.'},
-          {q:'Жоғары тәуекел шешім',o:['AI-ға толық тапсыру','Адамдық тексеріс қажет','Еш тексеріс','Тек чат'],a:1,e:'Қауіп жоғары болса адам тексеруі қажет.'},
-          {q:'Нәтижені пайдалану',o:['Тексерусіз жариялау','Тексеріп, жауапкершілікпен қолдану','Көшіріп жіберу','Кез келгенін'],a:1,e:'Жауапты пайдалану маңызды.'}
-        ]
-      }
-    ],
-    finalExtra:[
-      {q:'API кілті туралы дұрыс тұжырым',o:['Жариялау','Жасырын сақтау','Чатта жіберу','Құжатқа жазу'],a:1,e:'Кілт құпия болуы керек.'}
-    ]
-  }
-];
-
-function getFinalQuestions(course){
-  if(course.final) return course.final;
-  const base=(course.modules||[]).flatMap(m=>m.quiz||[]);
-  const extra=course.finalExtra||[];
-  course.final=[...base,...extra].slice(0,10);
-  return course.final;
-}
-
-COURSE_DATA.forEach(c=>{ getFinalQuestions(c); });
-
-let currentCourseId=null;
-const courseState={};
-const courseListOpen={};
-
-function getCourse(id){
-  return COURSE_DATA.find(c=>c.id===id) || COURSE_DATA[0];
-}
-
-function ensureCourseState(courseId){
-  if(courseState[courseId]) return courseState[courseId];
-  const c=getCourse(courseId);
-  const finalQs=getFinalQuestions(c);
-  courseState[courseId]={
-    started:false,
-    modules:c.modules.map((m,i)=>({
-      open:i===0,
-      ready:false,
-      done:false,
-      score:0,
-      answers:Array(m.quiz.length).fill(null),
-    })),
-    final:{started:false,idx:0,score:0,answered:false,done:false,answers:Array(finalQs.length).fill(null),submitted:false},
-  };
-  return courseState[courseId];
-}
-
-function toggleCourseDetails(courseId){
-  courseListOpen[courseId]=!courseListOpen[courseId];
-  renderCoursesList();
-}
-
-function startCourse(courseId){
-  const st=ensureCourseState(courseId);
-  if(!st.started){
-    st.started=true;
-    st.modules.forEach((m,i)=>{m.open=i===0;});
-  }
-  renderCourseView();
-}
-
-function isModuleUnlocked(st,mi){
-  if(!st.started) return false;
-  if(mi===0) return true;
-  return !!st.modules[mi-1]?.done;
-}
-
-function allModulesDone(st){
-  return st.modules.every(m=>m.done);
-}
-
-function moduleStats(course,st,mi){
-  const m=course.modules[mi];
-  const answers=st.modules[mi].answers;
-  const total=m.quiz.length;
-  let answered=0, correct=0;
-  answers.forEach((a,i)=>{
-    if(a!==null){
-      answered++;
-      if(a===m.quiz[i].a) correct++;
-    }
-  });
-  const pass=answered===total && correct>=Math.ceil(total*0.66);
-  return {total, answered, correct, pass};
-}
-
-function renderCoursesList(){
-  const wrap=document.getElementById('courseList');
-  if(!wrap) return;
-  const startLabel=lang==='kk'?'Курсты бастау':'Начать курс';
-  const metaLabel=lang==='kk'
-    ?(cnt=>`3 модуль · ${cnt} сұрақ · сертификат`)
-    :(cnt=>`3 модуля · ${cnt} вопросов · сертификат`);
-  const toggleLabel=(open)=>lang==='kk'?(open?'Жабу':'ҚҰРЫЛЫМЫ'):(open?'Скрыть':'Структура');
-  const moduleLabel=(i)=>lang==='kk'?`Модуль ${i+1}`:`Модуль ${i+1}`;
-  const textLabel=lang==='kk'?'Мәтін':'Текст';
-  const miniLabel=lang==='kk'?'Мини‑тест (3 сұрақ)':'Мини‑тест (3 вопроса)';
-  const finalLabel=lang==='kk'?'Қорытынды тест (10 сұрақ)':'Итоговый тест (10 вопросов)';
-  wrap.innerHTML=COURSE_DATA.map(c=>{
-    const open=!!courseListOpen[c.id];
-    const total=getFinalQuestions(c).length;
-    const steps=c.modules.map((m,mi)=>`
-      <div class="course-step">
-        <span class="tag">${moduleLabel(mi)}</span>
-        <span>${m.title} · ${textLabel} → ${miniLabel}</span>
-      </div>
-    `).join('');
-    return `
-      <div class="course-card ${open?'open':''}">
-        <div class="course-head" onclick="toggleCourseDetails('${c.id}')">
-          <div>
-            <div class="course-title">${c.title}</div>
-            <div class="course-desc">${c.desc}</div>
-            <div class="course-meta">${metaLabel(total)}</div>
-          </div>
-          <div class="course-toggle">${toggleLabel(open)}</div>
-        </div>
-        <div class="course-details">
-          <div class="course-struct">
-            ${steps}
-            <div class="course-step">
-              <span class="tag">FIN</span>
-              <span>${finalLabel}</span>
-            </div>
-          </div>
-          <div class="course-actions">
-            <button class="gbtn-outline course-cta" onclick="openCourse('${c.id}')">${startLabel}</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function openCourse(id){
-  currentCourseId=id;
-  go('quiz');
-}
-
-function renderCourseView(){
-  const wrap=document.getElementById('courseView');
-  if(!wrap) return;
-  if(!currentCourseId){
-    wrap.innerHTML=`<div class="course-empty">${lang==='kk'?'Курс таңдаңыз. Курстар бөліміне өтіңіз.':'Выберите курс. Перейдите в раздел курсов.'} <button class="gbtn-outline" onclick="go('courses')" style="margin-left:.5rem;">${lang==='kk'?'Курстарға өту':'Перейти к курсам'}</button></div>`;
-    return;
-  }
-  const c=getCourse(currentCourseId);
-  const st=ensureCourseState(c.id);
-  const totalFinal=getFinalQuestions(c).length;
-  const doneCount=st.modules.filter(m=>m.done).length;
-  const progressLabel=lang==='kk'
-    ?`${doneCount}/3 модуль аяқталды`
-    :`Пройдено модулей: ${doneCount}/3`;
-  const backLabel=lang==='kk'?'Курстарға қайту':'Назад к курсам';
-  const startLabel=lang==='kk'?'Курсты бастау':'Начать курс';
-  const metaText=lang==='kk'
-    ?`3 модуль · ${totalFinal} сұрақ · сертификат`
-    :`3 модуля · ${totalFinal} вопросов · сертификат`;
-  if(!st.started){
-    wrap.innerHTML=`
-      <div class="course-view">
-        <div class="course-hero">
-          <h2>${c.title}</h2>
-          <p>${c.desc}</p>
-          <div class="course-meta">${metaText}</div>
-          <div class="course-back">
-            <button class="gbtn-outline" onclick="go('courses')">← ${backLabel}</button>
-            <button class="gbtn" onclick="startCourse('${c.id}')">▶ ${startLabel}</button>
-          </div>
-        </div>
-        <div class="course-empty">
-          ${lang==='kk'
-            ?'Бұл курс модульдерден тұрады: алдымен мәтінді оқисыз, кейін мини‑тест тапсырасыз. Дайын болсаңыз, курсты бастаңыз.'
-            :'Курс состоит из модулей: сначала изучаете материал, затем проходите мини‑тест. Нажмите «Начать курс».'
-          }
-        </div>
-      </div>
-    `;
-    return;
-  }
-  const finalLocked=!allModulesDone(st);
-  wrap.innerHTML=`
-    <div class="course-view">
-      <div class="course-hero">
-        <h2>${c.title}</h2>
-        <p>${c.desc}</p>
-        <div class="course-meta">${metaText}</div>
-        <div class="course-progress">${progressLabel}</div>
-        <div class="course-back">
-          <button class="gbtn-outline" onclick="go('courses')">← ${backLabel}</button>
-        </div>
-      </div>
-      <div class="module-grid">
-        ${c.modules.map((m,mi)=>renderModuleCard(c,mi,st)).join('')}
-      </div>
-      <div class="final-card ${finalLocked?'locked':''}">
-        <div class="final-head">
-          <div class="final-title">${lang==='kk'?'Қорытынды тест':'Итоговый тест'}</div>
-          <div class="final-note">${totalFinal} ${lang==='kk'?'сұрақ':'вопросов'}</div>
-        </div>
-        <div id="finalBox"></div>
-      </div>
+<!-- AUTH MODAL -->
+<div class="mbg on" id="authModal">
+  <div class="mbox" style="max-width: 420px;">
+    <div class="auth-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+      <button class="stab on" id="authLoginTab" style="flex: 1; padding: 0.5rem; text-align: center;">Кіру</button>
+      <button class="stab" id="authRegisterTab" style="flex: 1; padding: 0.5rem; text-align: center;">Тіркелу</button>
     </div>
-  `;
-  renderFinalQuestion(c.id);
-}
-
-function renderModuleCard(course,mi,st){
-  const m=course.modules[mi];
-  const ms=st.modules[mi];
-  const unlocked=isModuleUnlocked(st,mi);
-  const open=st.started && ms.open;
-  const statusClass=ms.done?'done':(unlocked?'open':'locked');
-  const statusLabel=ms.done
-    ?(lang==='kk'?'ӨТТІ':'ПРОЙДЕНО')
-    :(unlocked?(lang==='kk'?'АШЫҚ':'ОТКРЫТО'):(lang==='kk'?'ҚҰЛЫПТАУЛЫ':'ЗАКРЫТО'));
-  const toggleLabel=lang==='kk'?(open?'Жабу':'Ашу'):(open?'Скрыть':'Открыть');
-  const stats=moduleStats(course,st,mi);
-  const scoreText=`${stats.correct}/${stats.total}`;
-  const showQuiz=ms.ready || stats.answered>0 || ms.done;
-  const quizHtml=showQuiz
-    ?`<div class="mod-quiz">${m.quiz.map((q,qi)=>renderModuleQuestion(course,mi,qi,st)).join('')}</div>`
-    :'';
-  const scoreHtml=showQuiz
-    ?`<div class="mod-score">${lang==='kk'?'Мини‑тест':'Мини‑тест'}: ${scoreText}</div>`
-    :'';
-  const resultHtml=stats.answered===stats.total
-    ?`<div class="mod-result ${stats.pass?'ok':'err'}">${stats.pass
-        ?(lang==='kk'?'✔ Мини‑тесттен өттіңіз. Келесі модуль ашылды.':'✔ Мини‑тест пройден. Следующий модуль открыт.')
-        :(lang==='kk'?'✖ Мини‑тесттен өте алмадыңыз. Қайта тапсырыңыз.':'✖ Мини‑тест не пройден. Попробуйте снова.')
-      }</div>`
-    :'';
-  const actionStart=unlocked && !ms.ready && !ms.done
-    ?`<button class="gbtn" onclick="startModuleQuiz('${course.id}',${mi})">▶ ${lang==='kk'?'ДАЙЫНМЫН':'ГОТОВ'}</button>`
-    :'';
-  const actionRetry=stats.answered===stats.total && !stats.pass
-    ?`<button class="gbtn-outline" onclick="resetModuleQuiz('${course.id}',${mi})">↺ ${lang==='kk'?'ҚАЙТА ТАПСЫРУ':'ПОВТОРИТЬ'}</button>`
-    :'';
-  const actions=(actionStart||actionRetry)
-    ?`<div class="mod-actions">${actionStart}${actionRetry}</div>`
-    :'';
-  return `
-    <div class="mod-card ${!unlocked?'locked':''} ${ms.done?'done':''}">
-      <div class="mod-top">
-        <div>
-          <div class="mod-head">${lang==='kk'?'МОДУЛЬ':'МОДУЛЬ'} ${mi+1}</div>
-          <div class="mod-title">${m.title}</div>
-        </div>
-        <div class="mod-top-actions">
-          <span class="mod-status ${statusClass}">${statusLabel}</span>
-          ${st.started?`<button class="gbtn-outline mod-toggle" onclick="toggleModule('${course.id}',${mi})">${toggleLabel}</button>`:''}
-        </div>
-      </div>
-      ${open?`
-        <div class="mod-body">
-          <div class="mod-lead">${m.lead}</div>
-          <ul class="mod-list">${m.points.map(p=>`<li>${p}</li>`).join('')}</ul>
-          ${actions}
-          ${!unlocked?`<div class="mod-locked-note">${lang==='kk'?'Алдыңғы модульді аяқтаңыз.':'Сначала завершите предыдущий модуль.'}</div>`:''}
-          ${quizHtml}
-          ${resultHtml}
-          ${scoreHtml}
-        </div>
-      `:''}
-    </div>
-  `;
-}
-
-function renderModuleQuestion(course,mi,qi,st){
-  const q=course.modules[mi].quiz[qi];
-  const chosen=st.modules[mi].answers[qi];
-  const qid=`${course.id}-${mi}-${qi}`;
-  const opts=q.o.map((o,i)=>{
-    let cls='qopt';
-    if(chosen!==null){
-      cls+=' dis';
-      if(i===q.a) cls+=' ok';
-      if(i===chosen && chosen!==q.a) cls+=' err';
-    }
-    return `<button class="${cls}" onclick="pickModuleAnswer('${course.id}',${mi},${qi},${i})" ${chosen!==null?'disabled':''}><span class="qkey">${['A','B','C','D'][i]}</span>${o}</button>`;
-  }).join('');
-  const fbText=chosen===null?'':(chosen===q.a?`✓ ${q.e}`:`✗ ${q.e}`);
-  const fbClass=chosen===null?'qfb':`qfb show ${chosen===q.a?'ok':'err'}`;
-  return `
-    <div class="mod-q" id="modq-${qid}">
-      <div class="qq">${q.q}</div>
-      <div class="qopts">${opts}</div>
-      <div class="${fbClass}" id="modfb-${qid}">${fbText}</div>
-    </div>
-  `;
-}
-
-function toggleModule(courseId,mi){
-  const st=ensureCourseState(courseId);
-  if(!st.started) return;
-  st.modules[mi].open=!st.modules[mi].open;
-  renderCourseView();
-}
-
-function startModuleQuiz(courseId,mi){
-  const st=ensureCourseState(courseId);
-  if(!isModuleUnlocked(st,mi)) return;
-  st.modules[mi].ready=true;
-  st.modules[mi].open=true;
-  renderCourseView();
-}
-
-function resetModuleQuiz(courseId,mi){
-  const c=getCourse(courseId);
-  const st=ensureCourseState(courseId);
-  const ms=st.modules[mi];
-  ms.answers=Array(c.modules[mi].quiz.length).fill(null);
-  ms.ready=false;
-  ms.done=false;
-  ms.score=0;
-  renderCourseView();
-}
-
-function pickModuleAnswer(courseId,mi,qi,optIdx){
-  const c=getCourse(courseId);
-  const st=ensureCourseState(courseId);
-  if(!isModuleUnlocked(st,mi)) return;
-  const ms=st.modules[mi];
-  if(ms.answers[qi]!==null) return;
-  ms.answers[qi]=optIdx;
-  ms.ready=true;
-  const stats=moduleStats(c,st,mi);
-  ms.score=stats.correct;
-  if(stats.answered===stats.total){
-    if(stats.pass){
-      ms.done=true;
-      if(st.modules[mi+1]) st.modules[mi+1].open=true;
-    }
-  }
-  renderCourseView();
-}
-
-function startFinalTest(courseId){
-  const c=getCourse(courseId);
-  const st=ensureCourseState(courseId);
-  if(!allModulesDone(st)) return;
-  const finalQs=getFinalQuestions(c);
-  st.final={started:true,idx:0,score:0,answered:false,done:false,answers:Array(finalQs.length).fill(null),submitted:false};
-  renderFinalQuestion(courseId);
-}
-
-function renderFinalQuestion(courseId){
-  const c=getCourse(courseId);
-  const st=ensureCourseState(courseId);
-  const f=st.final;
-  const box=document.getElementById('finalBox');
-  if(!box) return;
-  const finalQs=getFinalQuestions(c);
-  const total=finalQs.length;
-  if(!allModulesDone(st)){
-    box.innerHTML=`<div class="final-note">${lang==='kk'?'Алдымен барлық модульді аяқтаңыз.':'Сначала завершите все модули.'}</div>`;
-    return;
-  }
-  if(!f.started){
-    box.innerHTML=`<div class="final-note">${lang==='kk'?'Қорытынды тестті бастау үшін батырманы басыңыз.':'Нажмите кнопку, чтобы начать итоговый тест.'}</div><div class="final-actions"><button class="gbtn" onclick="startFinalTest('${courseId}')">${lang==='kk'?'БАСТАУ':'НАЧАТЬ'}</button></div>`;
-    return;
-  }
-  if(f.done){
-    const points = f.score * 2;
-    const pass=points>=14;
-    const msg=pass
-      ?(lang==='kk'?'ҚҰТТЫҚТАЙМЫЗ! Қорытынды тесттен өттіңіз.':'ПОЗДРАВЛЯЕМ! Итоговый тест пройден.')
-      :(lang==='kk'?'14 очко жинай алмадыңыз. Материалды қайталап, қайта тапсырыңыз.':'Не набрано 14 очков. Повторите материал и попробуйте снова.');
-    const totalPoints=total*2;
-    const percent=Math.round((points/totalPoints)*100);
-    if(pass && !f.submitted){
-      f.submitted=true;
-      submitFinalScore(c,points);
-    }
-    box.innerHTML=`
-      <div style="text-align:center;padding:1rem 0">
-        <div class="res-pct">${points}</div>
-        <div style="font-size:1.7rem;margin-bottom:.4rem">${points>=16?'⭐⭐⭐':points>=12?'⭐⭐':'⭐'}</div>
-        <div class="res-msg">${msg}</div>
-        ${pass?`<div class="certbox">
-          <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
-          <div class="cert-nm">${pName||'Anonymous'}</div>
-          <div class="cert-sub">${lang==='kk'?'Курсты аяқтады':'Завершил курс'}: ${c.title}</div>
-          <div class="cert-sc">${percent}%</div>
-        </div>
-        <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${percent},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
-        <button class="gbtn-outline" onclick="resetFinalTest('${courseId}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
-      </div>
-    `;
-    return;
-  }
-  const q=finalQs[f.idx];
-  const prog=Math.round((f.idx/total)*100);
-  const chosen=f.answers[f.idx];
-  const opts=q.o.map((o,i)=>{
-    let cls='qopt';
-    if(f.answered){
-      cls+=' dis';
-      if(i===q.a) cls+=' ok';
-      if(i===chosen && chosen!==q.a) cls+=' err';
-    }
-    return `<button class="${cls}" onclick="pickFinalAnswer('${courseId}',${i})" ${f.answered?'disabled':''}><span class="qkey">${['A','B','C','D'][i]}</span>${o}</button>`;
-  }).join('');
-  const fbText=!f.answered?'':(chosen===q.a?`✓ ${q.e}`:`✗ ${q.e}`);
-  const fbClass=!f.answered?'qfb':`qfb show ${chosen===q.a?'ok':'err'}`;
-  box.innerHTML=`
-    <div class="qwrap">
-      <div class="qprog-bg"><div class="qprog-fill" style="width:${prog}%"></div></div>
-      <div class="qmeta">${lang==='kk'?'СҰРАҚ':'ВОПРОС'} ${f.idx+1} / ${total}</div>
-      <div class="qq">${q.q}</div>
-      <div class="qopts">${opts}</div>
-      <div class="${fbClass}" id="qf">${fbText}</div>
-      <div class="qfoot">
-        <span class="qscore">✓ ${f.score}/${total}</span>
-        <button class="qnext" style="display:${f.answered?'inline-block':'none'}" onclick="nextFinal('${courseId}')">
-          ${f.idx===total-1?(lang==='kk'?'НӘТИЖЕ ▶':'РЕЗУЛЬТАТ ▶'):(lang==='kk'?'КЕЛЕСІ ▶':'ДАЛЕЕ ▶')}
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-function pickFinalAnswer(courseId,optIdx){
-  const c=getCourse(courseId);
-  const st=ensureCourseState(courseId);
-  const f=st.final;
-  if(!f.started || f.done || f.answered) return;
-  const q=getFinalQuestions(c)[f.idx];
-  f.answers[f.idx]=optIdx;
-  f.answered=true;
-  if(optIdx===q.a) f.score++;
-  renderFinalQuestion(courseId);
-}
-
-function nextFinal(courseId){
-  const st=ensureCourseState(courseId);
-  const f=st.final;
-  if(!f.answered) return;
-  f.idx++;
-  f.answered=false;
-  if(f.idx>=getFinalQuestions(getCourse(courseId)).length){
-    f.done=true;
-  }
-  renderFinalQuestion(courseId);
-}
-
-function resetFinalTest(courseId){
-  const c=getCourse(courseId);
-  const finalQs=getFinalQuestions(c);
-  courseState[courseId].final={started:false,idx:0,score:0,answered:false,done:false,answers:Array(finalQs.length).fill(null),submitted:false};
-  renderFinalQuestion(courseId);
-}
-
-function submitFinalScore(course,points){
-  addBoard(pName,points,course.id,course.title);
-  renderFinalQuestion(course.id);
-}
-
-// ========== QUIZ (10 сұрақ) ==========
-const QS=[
-  {kk:{q:"Қауіпсіз пароль деп нені айтамыз?",o:["Туған жылыңыз","12+ символды күрделі пароль","Атыңыз бен фамилияңыз","4 цифрлық сан"],e:"12+ символ, үлкен-кіші әріп, сан және арнайы белгілер — қауіпсіз пароль."},ru:{q:"Что называется надёжным паролем?",o:["Год рождения","Сложный пароль 12+ символов","Имя и фамилия","4-значное число"],e:"12+ символов, разные регистры, цифры и спецсимволы — надёжный пароль."},a:1},
-  {kk:{q:"Фишинг дегеніміз не?",o:["Балық аулау түрі","Жеке деректерді ұрлауға жалған хаттар","Интернет жылдамдығын өлшеу","Бағдарламалау тілі"],e:"Фишинг — сенімді ұйымды бейнелеп деректерді ұрлауға тырысу."},ru:{q:"Что такое фишинг?",o:["Вид рыбалки","Рассылка фейковых писем для кражи данных","Измерение скорости","Язык программирования"],e:"Фишинг — имитация надёжных организаций для кражи данных."},a:1},
-  {kk:{q:"2FA не үшін қолданылады?",o:["Интернет жылдамдықты арттыру","Аккаунтты қорғау — пароль + SMS код","Файлдарды жүктеу","Видео сапасын жақсарту"],e:"2FA — кіруде екі дәйектеме: пароль + телефон коды."},ru:{q:"Для чего используется 2FA?",o:["Ускорить интернет","Защита аккаунта — пароль + SMS","Скачивание файлов","Улучшение видео"],e:"2FA — при входе два подтверждения: пароль + код с телефона."},a:1},
-  {kk:{q:"Интернеттегі ақпаратты оқығанда не істеу керек?",o:["Барлығына сену","Тек Wikipedia-ға сену","2-3 дереккөзден тексеру","Тек достар сілтемесіне сену"],e:"Ақпаратты 2-3 дереккөзден тексер — жалған жаңалықтар кеңінен таралады."},ru:{q:"Что делать при чтении информации в интернете?",o:["Доверять всему","Только Wikipedia","Проверять в 2-3 источниках","Только ссылки от друзей"],e:"Проверяй информацию в 2-3 источниках — фейки распространены."},a:2},
-  {kk:{q:"Ашық Wi-Fi желісінде не қауіпті?",o:["Интернет баяу болады","Деректерді үшінші тарап оқи алады","Батарея тез бітеді","Барлық жауап дұрыс"],e:"Ашық Wi-Fi-да трафигіңді ұстап алу мүмкін. VPN пайдалан."},ru:{q:"Что опасно в открытой Wi-Fi?",o:["Медленный интернет","Третьи лица могут читать данные","Быстро садится батарея","Все верны"],e:"В открытой Wi-Fi могут перехватить трафик. Используй VPN."},a:1},
-  {kk:{q:"Авторлық құқық туралы дұрыс тұжырым?",o:["Интернеттегі мазмұнды еркін пайдалануға болады","Белгі болмаса — рұқсат","Рұқсатсыз пайдалану заңға қайшы","Тегін сайттан алса — еркін"],e:"Интернеттегі суреттер мен мақалалар — авторлар меншігі."},ru:{q:"Верное утверждение об авторском праве?",o:["Контент в интернете свободен","Нет знака — можно","Использование без разрешения незаконно","С бесплатных сайтов — можно"],e:"Картинки и статьи — собственность авторов."},a:2},
-  {kk:{q:"Парольді есте сақтаудың ең қауіпсіз жолы?",o:["Ноутбуктағы стикерге жазу","Пароль менеджер пайдалану","Email-де сақтау","Бір паролді пайдалану"],e:"Bitwarden, LastPass — шифрлап сақтайды."},ru:{q:"Самый безопасный способ хранить пароли?",o:["Написать на стикере","Менеджер паролей","Хранить в email","Один пароль"],e:"Bitwarden, LastPass — хранят зашифрованно."},a:1},
-  {kk:{q:"Смартфон қосымшаларына рұқсат берерде не істеу керек?",o:["Барлығын қабылдау","Тек қажетті рұқсаттарды беру","Мүлдем бермеу","Тек геолокация беру"],e:"Артық рұқсат — жеке деректер қаупі."},ru:{q:"Что делать при запросе разрешений?",o:["Принять все","Давать только необходимые","Не давать вообще","Только геолокацию"],e:"Лишние разрешения — угроза данным."},a:1},
-  {kk:{q:"AI (ChatGPT) пайдаланғанда не ескеру керек?",o:["Барлық жауапқа сену","Жеке деректер кіргізбеу және тексеру","Тапсырманы толық AI-мен орындау","Мүлдем пайдаланбау"],e:"AI жақсы көмекші, бірақ жеке деректер кіргізбе, жауаптарын тексер."},ru:{q:"Что учитывать при использовании AI?",o:["Доверять всем ответам","Не вводить личные данные и проверять","Делать всё через AI","Не использовать"],e:"AI — хороший помощник, но не вводи личные данные, проверяй ответы."},a:1},
-  {kk:{q:"Кибербуллинг туралы дұрыс жауап?",o:["Жауап берсең мәселе шешіледі","Блоктап сенімді адамға хабарлау","Бұл ойын, алаңдама","Желілік зорлық — заңды"],e:"Кибербуллингте: блокта, скриншот ал, хабарла."},ru:{q:"Правильный ответ о кибербуллинге?",o:["Ответить — решит проблему","Заблокировать и сообщить взрослым","Это игра","Это законно"],e:"При кибербуллинге: блокируй, скриншоты, сообщи."},a:1},
-];
-let qc=0,qs=0,qa=false;
-function renderQ(){
-  const q=QS[qc],d=q[lang]||q.kk;
-  document.getElementById('qp').style.width=(qc/QS.length*100)+'%';
-  document.getElementById('qb').innerHTML=`
-    <div class="qmeta">${lang==='kk'?'СҰРАҚ':'ВОПРОС'} ${qc+1} / ${QS.length}</div>
-    <div class="qq">${d.q}</div>
-    <div class="qopts">${d.o.map((o,i)=>`
-      <button class="qopt" onclick="pickQ(${i})" id="qo${i}">
-        <span class="qkey">${['A','B','C','D'][i]}</span>${o}
-      </button>`).join('')}</div>
-    <div class="qfb" id="qf"></div>
-    <div class="qfoot">
-      <span class="qscore">✓ ${qs}/${QS.length}</span>
-      <button class="qnext" id="qn" onclick="nextQ()">
-        ${qc===QS.length-1?(lang==='kk'?'НӘТИЖЕ ▶':'РЕЗУЛЬТАТ ▶'):(lang==='kk'?'КЕЛЕСІ ▶':'ДАЛЕЕ ▶')}
-      </button>
-    </div>`;
-  qa=false;
-}
-function pickQ(i){
-  if(qa)return;qa=true;
-  const q=QS[qc],d=q[lang]||q.kk;
-  document.querySelectorAll('.qopt').forEach(o=>o.classList.add('dis'));
-  const fb=document.getElementById('qf');
-  if(i===q.a){qs++;document.getElementById('qo'+i).classList.add('ok');fb.innerHTML='✓ '+d.e;fb.className='qfb show ok';}
-  else{document.getElementById('qo'+i).classList.add('err');document.getElementById('qo'+q.a).classList.add('ok');fb.innerHTML=`✗ ${lang==='kk'?'Дұрыс':'Правильно'}: ${d.o[q.a]} — ${d.e}`;fb.className='qfb show err';}
-  document.getElementById('qn').style.display='inline-block';
-  document.querySelector('.qscore').textContent=`✓ ${qs}/${QS.length}`;
-}
-function nextQ(){qc++;qc>=QS.length?showRes():renderQ();}
-function showRes(){
-  document.getElementById('qp').style.width='100%';
-  const points = qs * 2;
-  const percent = Math.round((points/(QS.length*2))*100);
-  const msg=points>=16?(lang==='kk'?'ЖОҒАРЫ ДЕҢГЕЙ — Керемет!':'ВЫСОКИЙ УРОВЕНЬ — Отлично!'):points>=12?(lang==='kk'?'ОРТАША — Жақсы нәтиже.':'СРЕДНИЙ — Хороший результат.'):(lang==='kk'?'БАСТАУЫШ — Материалдарды оқы.':'НАЧАЛЬНЫЙ — Изучи материалы.');
-  const cn=pName||'Anonymous';
-  if(pName) addBoard(pName,points,'quiz','Цифрлық сауаттылық тесті');
-  document.getElementById('qb').innerHTML=`
-    <div style="text-align:center;padding:1rem 0">
-      <div class="res-pct">${points}</div>
-      <div style="font-size:1.7rem;margin-bottom:.4rem">${points>=16?'⭐⭐⭐':points>=12?'⭐⭐':'⭐'}</div>
-      <div class="res-msg">${msg}</div>
-      ${points>=12?`<div class="certbox">
-        <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
-        <div class="cert-nm">${cn}</div>
-        <div class="cert-sub">${lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности'}</div>
-        <div class="cert-sc">${percent}%</div>
-      </div>
-      <button class="gbtn" onclick="dlCert('${cn}',${percent})" style="margin:.75rem .3rem 0">
-        ⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}
-      </button>`:''}
-      <button class="gbtn-outline" onclick="resetQ()" style="margin:.75rem .3rem 0">
-        ↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}
-      </button>
-    </div>`;
-}
-function dlCert(n,p,courseTitle){
-  const c=document.createElement('canvas');c.width=800;c.height=520;
-  const x=c.getContext('2d');
-  x.fillStyle='#04040a';x.fillRect(0,0,800,520);
-  x.shadowBlur=20;x.shadowColor='#00f0c8';
-  x.strokeStyle='#00f0c8';x.lineWidth=2;x.strokeRect(16,16,768,488);
-  x.shadowBlur=0;
-  x.strokeStyle='rgba(0,240,200,0.2)';x.lineWidth=1;x.strokeRect(26,26,748,468);
-  for(let y=0;y<520;y+=4){x.fillStyle='rgba(0,0,0,0.04)';x.fillRect(0,y,800,2);}
-  x.textAlign='center';
-  x.fillStyle='#00f0c8';x.font='bold 22px monospace';x.shadowBlur=15;x.shadowColor='#00f0c8';
-  x.fillText('[ ЦИФРСАУАТ ]',400,90);
-  x.shadowBlur=0;
-  x.fillStyle='#5a6480';x.font='11px monospace';
-  x.fillText('СЕРТИФИКАТ · CERTIFICATE',400,120);
-  x.fillStyle='#e8f0ff';x.font='bold 34px sans-serif';
-  x.fillText(n,400,210);
-  x.fillStyle='#8890aa';x.font='15px sans-serif';
-  const sub = courseTitle
-    ? (lang==='kk'?'Курсты аяқтады: ':'Завершил курс: ') + courseTitle
-    : (lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности');
-  x.fillText(sub,400,260);
-  x.fillStyle='#00f0c8';x.font='bold 54px monospace';x.shadowBlur=25;x.shadowColor='#00f0c8';
-  x.fillText(p + '%',400,360);
-  x.shadowBlur=0;x.fillStyle='#5a6480';x.font='12px monospace';
-  x.fillText(new Date().getFullYear(),400,430);
-  const a=document.createElement('a');a.download=`cert_${n}.png`;a.href=c.toDataURL();a.click();
-}
-function resetQ(){qc=0;qs=0;renderQ();}
-
-// ========== КЕҢЕСШІ (ADV) ==========
-const SC_ADV = {
-  kk:['Таныс емес адамнан күдікті сілтеме келді','Банктен «паролді жіберіңіз» деген хабар алдым','Instagram аккаунтым бұзылды, не істеймін?','Телефонымды бөтен адамға берсем не болады?'],
-  ru:['Пришла подозрительная ссылка от незнакомца','Получил сообщение «отправьте пароль» от банка','Instagram взломали, что делать?','Что будет если дать телефон чужому?']
-};
-const MD_ADV = {
-  kk:'// оқиғаны жаз — AI қауіп деңгейін бағалайды, нақты қадамдар береді',
-  ru:'// опиши ситуацию — AI оценит угрозу, даст конкретные шаги'
-};
-
-function updateChipsAdv(){
-  document.getElementById('smd').textContent=MD_ADV[lang];
-  document.getElementById('chips').innerHTML=SC_ADV[lang].map(s=>`<button class="chip" onclick="document.getElementById('sta').value=this.textContent">${s}</button>`).join('');
-}
-// ========== КЕҢЕСШІ (ADV) ЖАЛҒАСЫ ==========
-async function sendAIAdv(){
-  const txt=document.getElementById('sta').value.trim(); if(!txt) return;
-  document.getElementById('se').style.display='none';
-  document.getElementById('sr').style.display='none';
-  document.getElementById('sl').style.display='flex';
-  document.getElementById('sbtn').disabled=true;
-  try{
-    const res=await fetchWithRetry(AI_API_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({mode:'adv', text:txt, scenario:'bank'})
-    });
-    const data=await res.json().catch(()=>null);
-    if(!res.ok || !data || data.error){
-      const msg=(data?.error||data?.message||`HTTP ${res.status}`).toString();
-      document.getElementById('sr').innerHTML=`<div class="ai-blk"><div class="ai-lbl">⚠ ${lang==='kk'?'ҚАТЕ':'ОШИБКА'}</div><p style="color:var(--danger)">${msg}</p></div>`;
-      document.getElementById('sr').style.display='block';
-    } else {
-      const raw=(data.content||'{}').toString();
-      const cleaned=raw.replace(/```(?:json)?|```/g,'').trim();
-      let p=null;
-      try{ p=JSON.parse(cleaned); }catch{
-        const s=cleaned.indexOf('{'), e=cleaned.lastIndexOf('}');
-        if(s!==-1&&e!==-1&&e>s) try{ p=JSON.parse(cleaned.slice(s,e+1)); }catch(e){}
-      }
-      renderAdv(p,cleaned);
-    }
-  }catch(e){
-    document.getElementById('sr').innerHTML=`<div class="ai-blk"><p style="color:var(--danger)">⚠ ${lang==='kk'?'Қосылу қатесі':'Ошибка соединения'}</p></div>`;
-    document.getElementById('sr').style.display='block';
-  }
-  document.getElementById('sl').style.display='none';
-  document.getElementById('sbtn').disabled=false;
-}
-
-function renderAdv(p,raw){
-  let h='';
-  if(p && p.risk){
-    const rm={HIGH:'rH',MEDIUM:'rM',LOW:'rL'};
-    h+=`<div class="ai-blk"><div class="ai-lbl">◉ ${lang==='kk'?'AI ТАЛДАУЫ':'AI АНАЛИЗ'}</div><span class="rpill ${rm[p.risk]||'rM'}">▲ ${p.risk_label||p.risk}</span><p>${p.what||''}</p></div>`;
-    if(p.steps?.length) h+=`<div class="ai-blk"><div class="ai-lbl">◆ ${lang==='kk'?'НЕ ІСТЕУ КЕРЕК':'ЧТО ДЕЛАТЬ'}</div>${p.steps.map((s,i)=>`<p>▸ <b>${i+1}.</b> ${s}</p>`).join('')}</div>`;
-    if(p.prevention) h+=`<div class="ai-blk"><div class="ai-lbl">◈ ${lang==='kk'?'БОЛАШАҚТА':'В БУДУЩЕМ'}</div><p>${p.prevention}</p></div>`;
-  } else {
-    h=`<div class="ai-blk"><div class="ai-lbl">◉ AI</div><p>${raw.substring(0,400)}</p></div>`;
-  }
-  document.getElementById('sr').innerHTML=h;
-  document.getElementById('sr').style.display='block';
-}
-
-// ========== СИМУЛЯЦИЯ (4 сценарий) ==========
-let simChatHistory = [];
-let simChatActive = false;
-let simCurrentScenario = "bank";
-
-const SIM_SCENARIOS = {
-  kk: [
-    { id:'bank', label:'🏦 Банк (қауіпсіздік қызметі)' },
-    { id:'delivery', label:'📦 Жеткізу қызметі' },
-    { id:'prize', label:'🎁 Ұтыс ойыны' },
-    { id:'friend', label:'👤 Досым деп жазып тұр' }
-  ],
-  ru: [
-    { id:'bank', label:'🏦 Банк (служба безопасности)' },
-    { id:'delivery', label:'📦 Служба доставки' },
-    { id:'prize', label:'🎁 Розыгрыш приза' },
-    { id:'friend', label:'👤 Пишет якобы друг' }
-  ]
-};
-
-function renderSimScenarioOptions(){
-  const sel = document.getElementById('simScenario');
-  if(!sel) return;
-  const scenarios = SIM_SCENARIOS[lang] || SIM_SCENARIOS.kk;
-  sel.innerHTML = scenarios.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
-  simCurrentScenario = scenarios[0].id;
-  sel.value = simCurrentScenario;
-}
-
-function setSimScenario(){
-  const sel = document.getElementById('simScenario');
-  if(sel) simCurrentScenario = sel.value;
-}
-
-function _escHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-
-function _simRenderChat(){
-  const msgs = document.getElementById('simMessages');
-  const empty = document.getElementById('simEmpty');
-  if(!msgs) return;
-  if(!simChatHistory.length){ msgs.style.display='none'; if(empty) empty.style.display='flex'; return; }
-  if(empty) empty.style.display='none';
-  msgs.style.display='block';
-  msgs.innerHTML = simChatHistory.slice(-8).map(m=>`
-    <div class="sim-msg ${m.role==='assistant'?'scam':'user'}">
-      <div class="sim-msg-label">${m.role==='assistant'?(lang==='kk'?'◈ СКАМЕР':'◈ МОШЕННИК'):(lang==='kk'?'СІЗ':'ВЫ')}</div>
-      <div class="sim-msg-bubble">${_escHtml(m.content)}</div>
-    </div>`).join('');
-  const box = document.getElementById('simChatBox');
-  if(box) box.scrollTop = box.scrollHeight;
-}
-
-function _simSetLoader(show){
-  const el = document.getElementById('simLoader');
-  if(el) el.style.display = show ? 'flex' : 'none';
-}
-
-function _simSetBtns(sending){
-  const send = document.getElementById('simSendBtn');
-  const end = document.getElementById('simEndBtn');
-  const start = document.getElementById('simStartBtn');
-  if(send) send.disabled = sending || !simChatActive;
-  if(end) end.disabled = sending || !simChatActive || simChatHistory.length===0;
-  if(start) start.disabled = sending;
-}
-
-async function simStart(){
-    simChatHistory = [];
-    simChatActive = true;
-    _simRenderChat();
-    document.getElementById('simResult').style.display='none';
-    _simSetBtns(true);
-    _simSetLoader(true);
     
-    try{
-        // Бос messages жібереміз, сервер бірінші хабарды AI-сыз қайтарады
-        const res = await fetchWithRetry(AI_API_ENDPOINT,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ mode:'sim', messages:[], scenario:simCurrentScenario })
-        });
-        const data = await res.json();
-        
-        // Егер сервер қате қайтарса, fallback қолданамыз
-        let firstMsg = data?.content;
-        if (!firstMsg || firstMsg.includes('cannot') || firstMsg.includes('sorry') || firstMsg.includes('ai')) {
-            const fallbacks = {
-                bank: lang==='kk' ? 'Сәлеметсіз бе! Бұл Халық Банкінің қауіпсіздік бөлімі. Сіздің шотыңызда күдікті операция анықталды.' : 'Здравствуйте! Это служба безопасности банка. На вашем счете подозрительная операция.',
-                delivery: lang==='kk' ? 'Сәлем! Сіздің жөнелтіліміңіз тоқтап қалды, мекенжайды растау керек.' : 'Здравствуйте! Ваша посылка задержана, нужно подтвердить адрес.',
-                prize: lang==='kk' ? 'Құттықтаймыз! Сіз біздің ұтыс ойынымызда 500 000 теңге ұттыңыз!' : 'Поздравляем! Вы выиграли 500 000 тенге!',
-                friend: lang==='kk' ? 'Сәлем! Қалайсың? Көптен хабарласпадық 😊' : 'Привет! Как дела? Давно не общались 😊'
-            };
-            firstMsg = fallbacks[simCurrentScenario] || fallbacks.bank;
-        }
-        
-        simChatHistory.push({role:'assistant', content:firstMsg});
-        _simRenderChat();
-    } catch(e){
-        console.error('simStart error:', e);
-        const errMsg = lang==='kk' ? 'Қате, қайта бастаңыз.' : 'Ошибка, начните заново.';
-        simChatHistory.push({role:'assistant', content:errMsg});
-        _simRenderChat();
-    } finally{
-        _simSetLoader(false);
-        _simSetBtns(false);
-    }
-}
-async function simSend(){
-  if(!simChatActive) return;
-  const input = document.getElementById('simInput');
-  const txt = input.value.trim();
-  if(!txt) return;
-  input.value='';
-  simChatHistory.push({role:'user', content:txt});
-  _simRenderChat();
-  _simSetBtns(true);
-  _simSetLoader(true);
-  try{
-    const messagesToSend = simChatHistory.slice(-8);
-    const res = await fetchWithRetry(AI_API_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ mode:'sim', messages:messagesToSend, scenario:simCurrentScenario })
-    });
-    const data = await res.json();
-    let reply = data?.content || (lang==='kk'?'...':'...');
-    if(reply.toLowerCase().includes('cannot') || reply.toLowerCase().includes('sorry') || reply.toLowerCase().includes('ai')){
-      reply = lang==='kk'?'Қауіпсіздік мақсатында ақпаратыңызды тексеру керек. Кодты жіберіңіз.':'В целях безопасности необходимо проверить ваши данные. Отправьте код.';
-    }
-    simChatHistory.push({role:'assistant', content:reply});
-    _simRenderChat();
-  }catch(e){
-    simChatHistory.push({role:'assistant', content:lang==='kk'?'Байланыс үзілді.':'Связь прервана.'});
-    _simRenderChat();
-  }finally{
-    _simSetLoader(false);
-    _simSetBtns(false);
-  }
-}
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <h3 style="text-align: center; margin-bottom: 1rem; color: var(--teal);">ЦифрСауатқа қош келдіңіз!</h3>
+      <p style="text-align: center; margin-bottom: 1rem; color: var(--muted2); font-size: 0.85rem;">Өзінің есебіңізге кіріңіз</p>
+      <input type="text" id="loginUsername" placeholder="Логин (3-24 символ)" class="minput" maxlength="24" style="margin-bottom: 0.75rem;">
+      <input type="password" id="loginPassword" placeholder="Құпия сөз" class="minput" style="margin-bottom: 0.75rem;">
+      <div id="authError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
+      <button class="gbtn" id="loginBtn" style="width:100%;">Кіру →</button>
+    </div>
+    
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display: none;">
+      <h3 style="text-align: center; margin-bottom: 1rem; color: var(--teal);">Жаңа есеп бүктіңіз</h3>
+      <p style="text-align: center; margin-bottom: 1rem; color: var(--muted2); font-size: 0.85rem;">Сертификат алу үшін тіркелініз</p>
+      <input type="text" id="regUsername" placeholder="Логин (3-24 символ)" class="minput" maxlength="24" style="margin-bottom: 0.75rem;">
+      <input type="password" id="regPassword" placeholder="Құпия сөз (кем дегенде 4 символ)" class="minput" style="margin-bottom: 0.75rem;">
+      <div id="regError" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem;"></div>
+      <button class="gbtn" id="registerBtn" style="width:100%;">Тіркелу →</button>
+    </div>
+  </div>
+</div>
 
-async function simEnd(){
-  if(!simChatActive || simChatHistory.length===0) return;
-  simChatActive = false;
-  _simSetBtns(true);
-  _simSetLoader(true);
-  try{
-    const res = await fetchWithRetry(AI_ANALYZE_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ event:'end', lang, history:simChatHistory.slice(-8), last_user:'', scenario:simCurrentScenario })
-    });
-    const data = await res.json();
-    let content = data?.content || (lang==='kk'?'Талдау дайын.':'Анализ готов.');
-    // Қысқарту (максимум 600 символ)
-    if(content.length > 600) content = content.slice(0,600) + '...';
-    document.getElementById('simResult').innerHTML = `
-      <div class="ai-blk"><div class="ai-lbl">📊 ${lang==='kk'?'ТАЛДАУ':'АНАЛИЗ'}</div><div class="sim-pre">${_escHtml(content)}</div></div>
-      <div style="margin-top:.75rem;"><button class="gbtn-outline" onclick="simStart()" style="width:100%;">↺ ${lang==='kk'?'ҚАЙТА БАСТАУ':'НАЧАТЬ ЗАНОВО'}</button></div>`;
-    document.getElementById('simResult').style.display='block';
-  }catch(e){
-    document.getElementById('simResult').innerHTML=`<div class="ai-blk"><p style="color:var(--danger)">⚠ ${lang==='kk'?'Талдау қатесі':'Ошибка анализа'}</p></div>`;
-    document.getElementById('simResult').style.display='block';
-  }finally{
-    _simSetLoader(false);
-  }
-}
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">ЦифрСауат</div>
+    <button class="toggle-btn" id="sideToggle" onclick="toggleSidebar()" title="Toggle">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </svg>
+    </button>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <button class="nav-item active" onclick="go('home')"><span class="ni">🏠</span><span class="nl" data-kk="Басты бет" data-ru="Главная">Басты бет</span></button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="ҮЙРЕНУ" data-ru="ОБУЧЕНИЕ">ҮЙРЕНУ</div>
+      <button class="nav-item" onclick="go('info')"><span class="ni">📖</span><span class="nl" data-kk="Ақпарат" data-ru="Информация">Ақпарат</span></button>
+      <button class="nav-item" onclick="go('tips')"><span class="ni">💡</span><span class="nl" data-kk="Кеңестер" data-ru="Советы">Кеңестер</span></button>
+      <button class="nav-item" onclick="go('courses')"><span class="ni">🎓</span><span class="nl" data-kk="Курстар" data-ru="Курсы">Курстар</span></button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="ПРАКТИКА" data-ru="ПРАКТИКА">ПРАКТИКА</div>
+      <button class="nav-item" onclick="go('ai')"><span class="ni">🤖</span><span class="nl">AI Симулятор</span></button>
+      <button class="nav-item" onclick="go('quiz')"><span class="ni">🧠</span><span class="nl" data-kk="Тест" data-ru="Тест">Тест</span></button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label" data-kk="БАСҚА" data-ru="ДРУГОЕ">БАСҚА</div>
+      <button class="nav-item" onclick="go('lb')"><span class="ni">🏆</span><span class="nl" data-kk="Рейтинг" data-ru="Рейтинг">Рейтинг</span></button>
+      <button class="nav-item" onclick="go('survey')"><span class="ni">📋</span><span class="nl" data-kk="Сауалнама" data-ru="Опрос">Сауалнама</span></button>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="lang-btn" id="lb2" onclick="toggleLang()"><span class="ni">🌐</span><span class="nl" id="langLabel">Русский</span></button>
+    <button class="lang-btn" id="logoutBtn" style="display: none; margin-top: 0.5rem;"><span class="ni">🚪</span><span class="nl" data-kk="Шығу" data-ru="Выйти">Шығу</span></button>
+  </div>
+</aside>
 
-// SURVEY
-function submitS(){
-  if(!['q1','q2','q3','q4'].every(n=>document.querySelector(`input[name="${n}"]:checked`))){
-    alert(lang==='kk'?'Барлық сұрақтарға жауап беріңіз!':'Ответьте на все вопросы!'); return;
-  }
-  document.getElementById('sf').style.display='none';
-  document.getElementById('sd').style.display='block';
-}
+<div class="topbar">
+  <div class="logo-mark" style="font-family:'Orbitron',monospace;font-size:.8rem;color:var(--teal);">ЦС</div>
+  <button class="nav-item" onclick="go('home')">⬡</button>
+  <button class="nav-item" onclick="go('info')">◈</button>
+  <button class="nav-item" onclick="go('tips')">◆</button>
+  <button class="nav-item" onclick="go('ai')">◉ AI</button>
+  <button class="nav-item" onclick="go('quiz')">◎</button>
+  <button class="nav-item" onclick="go('lb')">🏆</button>
+  <button class="nav-item" onclick="go('courses')">▣</button>
+  <button class="nav-item" onclick="go('survey')">◇</button>
+  <button class="lang-btn" id="lb3" onclick="toggleLang()" style="font-size:.68rem;padding:.3rem .5rem;white-space:nowrap;flex-shrink:0;">RU</button>
+</div>
 
-// SIDEBAR TOGGLE
-let sidebarCollapsed = false;
-function toggleSidebar(){
-  sidebarCollapsed = !sidebarCollapsed;
-  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
-  document.querySelector('.shell').classList.toggle('collapsed-shell', sidebarCollapsed);
-  document.querySelector('.main').classList.toggle('sidebar-small', sidebarCollapsed);
-}
+<div class="shell">
+  <div></div>
+  <main class="main">
 
-// MODE SWITCH
-let currentMode = 'adv';
-function setMode(mode){
-  currentMode = mode;
-  document.getElementById('t1').classList.toggle('on', mode==='adv');
-  document.getElementById('t2').classList.toggle('on', mode==='sim');
-  document.getElementById('advPanel').style.display = mode==='adv' ? 'block' : 'none';
-  document.getElementById('simPanel').style.display = mode==='sim' ? 'block' : 'none';
-  if(mode==='sim') renderSimScenarioOptions();
-}
+    <!-- HOME -->
+    <section id="home" class="page active" style="max-width:100%">
+      <div class="home-inner">
+        <div class="home-badge">// <span data-kk="КОЛЛЕДЖ СТУДЕНТТЕРІНЕ" data-ru="ДЛЯ СТУДЕНТОВ">КОЛЛЕДЖ СТУДЕНТТЕРІНЕ</span></div>
+        <h1 class="home-title"><span class="t" data-kk="ЦИФРЛЫҚ" data-ru="ЦИФРОВАЯ">ЦИФРЛЫҚ</span><br><span class="glitch" data-text="ҚАУІПСІЗДІК" data-kk-text="ҚАУІПСІЗДІК" data-ru-text="БЕЗОПАСНОСТЬ" style="position:relative;">ҚАУІПСІЗДІК</span><br><span style="font-size:0.45em;color:var(--muted2);font-weight:400;font-family:'Manrope',sans-serif;letter-spacing:1px;" data-kk="— болашаққа дайындық" data-ru="— подготовка к будущему">— болашаққа дайындық</span></h1>
+        <p class="home-desc" data-kk="Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал." data-ru="Научись защищать себя от угроз в интернете. Тренируй реальные ситуации с AI симулятором, пройди тест, получи сертификат.">Интернеттегі қауіп-қатерлерден өзіңді қорғауды үйрен. AI симулятормен нақты жағдайларды машықтан, тест тапсыр, сертификат ал.</p>
+        <div class="home-grid">
+          <div class="hcard" onclick="go('ai')"><span class="hcard-icon">◉</span><div class="hcard-title">AI SIM</div><div class="hcard-desc" data-kk="Нақты жағдайлар" data-ru="Реальные ситуации">Нақты жағдайлар</div></div>
+          <div class="hcard" onclick="go('quiz')"><span class="hcard-icon">◎</span><div class="hcard-title" data-kk="ТЕСТ" data-ru="ТЕСТ">ТЕСТ</div><div class="hcard-desc" data-kk="Курс тесттері + сертификат" data-ru="Тесты курса + сертификат">Курс тесттері + сертификат</div></div>
+          <div class="hcard" onclick="go('tips')"><span class="hcard-icon">◆</span><div class="hcard-title" data-kk="КЕҢЕСТЕР" data-ru="СОВЕТЫ">КЕҢЕСТЕР</div><div class="hcard-desc" data-kk="Қорғаныш ережелері" data-ru="Правила защиты">Қорғаныш ережелері</div></div>
+          <div class="hcard" onclick="go('courses')"><span class="hcard-icon">▣</span><div class="hcard-title" data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</div><div class="hcard-desc" data-kk="Тегін ресурстар" data-ru="Бесплатные ресурсы">Тегін ресурстар</div></div>
+        </div>
+      </div>
+    </section>
 
-// INIT
-window.onload = () => {
-  // Автентификацияны тексеру
-  const token = localStorage.getItem('token');
-  if(token) {
-    fetch(AUTH_BASE + '/api/auth/me', { headers:{'Authorization':`Bearer ${token}`} })
-      .then(res => res.ok ? res.json() : Promise.reject())
-      .then(data => {
-        currentToken = token;
-        pName = data.username;
-        document.getElementById('authModal').classList.remove('on');
-        document.getElementById('logoutBtn').style.display = 'flex';
-        loadUserProgress();
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        document.getElementById('authModal').classList.add('on');
-      });
-  } else {
-    document.getElementById('authModal').classList.add('on');
-  }
-  
-  // Аутентификация батырмалары
-  document.getElementById('authLoginTab')?.addEventListener('click', () => {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('authLoginTab').classList.add('on');
-    document.getElementById('authRegisterTab').classList.remove('on');
-  });
-  document.getElementById('authRegisterTab')?.addEventListener('click', () => {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-    document.getElementById('authRegisterTab').classList.add('on');
-    document.getElementById('authLoginTab').classList.remove('on');
-  });
-  document.getElementById('loginBtn')?.addEventListener('click', () => {
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    login(username, password);
-  });
-  document.getElementById('registerBtn')?.addEventListener('click', () => {
-    const username = document.getElementById('regUsername').value.trim();
-    const password = document.getElementById('regPassword').value;
-    register(username, password);
-  });
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-  
-  renderCoursesList();
-  renderCourseView();
-  renderLB();
-  updateChipsAdv();
-  animatePage("home");
-  document.getElementById('simStartBtn').addEventListener('click', simStart);
-  document.getElementById('simSendBtn').addEventListener('click', simSend);
-  document.getElementById('simEndBtn').addEventListener('click', simEnd);
-  document.getElementById('simScenario').addEventListener('change', setSimScenario);
-  setMode('adv');
-};
-const researchLink = document.getElementById('researchPaperLink');
-if (researchLink) {
-    researchLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.open('https://doi.org/10.17059/ekon.reg.2025-4-6', '_blank');
-    });
-}
+<!-- INFO -->
+<section id="info" class="page">
+  <div class="ph">
+    <div class="ph-tag">// <span data-kk="НЕГІЗДЕР" data-ru="ОСНОВЫ">НЕГІЗДЕР</span></div>
+    <h1 class="ph-title" data-kk="Цифрлық сауаттылық <span class='acc'>дегеніміз</span> не?" data-ru="Что такое цифровая <span class='acc'>грамотность</span>?">Цифрлық сауаттылық <span class="acc">дегеніміз</span> не?</h1>
+    <p class="ph-desc" data-kk="Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті." data-ru="Умение эффективно, безопасно и ответственно использовать цифровые технологии.">Цифрлық технологияларды тиімді, қауіпсіз және жауапты түрде пайдалана білу қабілеті.</p>
+  </div>
+
+  <div class="grid-3">
+    <div class="ncard"><div class="ncard-icon">💻</div><h3 data-kk="Технологиялық дағдылар" data-ru="Технологические навыки">Технологиялық дағдылар</h3><p data-kk="Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу." data-ru="Умение использовать компьютер, смартфон и цифровые платформы.">Компьютер, смартфон және сандық платформаларды тиімді пайдалана білу.</p></div>
+    <div class="ncard"><div class="ncard-icon">🔒</div><h3 data-kk="Ақпараттық қауіпсіздік" data-ru="Информационная безопасность">Ақпараттық қауіпсіздік</h3><p data-kk="Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану." data-ru="Защита личных данных, надёжные пароли, защита от фишинга.">Жеке деректерді қорғау, күшті парольдер, фишинг пен алаяқтықтан сақтану.</p></div>
+    <div class="ncard"><div class="ncard-icon">🔍</div><h3 data-kk="Ақпаратты бағалау" data-ru="Оценка информации">Ақпаратты бағалау</h3><p data-kk="Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату." data-ru="Проверка достоверности информации, определение надёжных источников.">Интернеттегі ақпараттың дұрыс-бұрысын тексеру, сенімді көздерді ажырату.</p></div>
+    <div class="ncard"><div class="ncard-icon">🤝</div><h3 data-kk="Цифрлық этика" data-ru="Цифровая этика">Цифрлық этика</h3><p data-kk="Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау." data-ru="Ответственное поведение онлайн, уважение авторских прав.">Онлайн кеңістікте жауапты мінез-құлық, авторлық құқықты сыйлау.</p></div>
+    <div class="ncard"><div class="ncard-icon">📚</div><h3 data-kk="Цифрлық оқу" data-ru="Цифровое обучение">Цифрлық оқу</h3><p data-kk="Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру." data-ru="Эффективное обучение через онлайн-курсы и e-learning.">Онлайн курстар мен e-learning платформалары арқылы білімді тиімді меңгеру.</p></div>
+    <div class="ncard"><div class="ncard-icon">🌐</div><h3 data-kk="Желілік мәдениет" data-ru="Сетевая культура">Желілік мәдениет</h3><p data-kk="Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау." data-ru="Правильное общение в соцсетях, создание профессионального имиджа.">Әлеуметтік желілерде дұрыс жазысу, кәсіби имидж жасау.</p></div>
+  </div>
+
+  <!-- СТАТИСТИКА БЛОГЫ -->
+  <div class="ph" style="margin-top: 3rem;">
+    <div class="ph-tag">📊 // ЦИФРЛЫҚ ҚАЗАҚСТАН СТАТИСТИКАСЫ</div>
+    <h2 class="ph-title">Нақты <span class="acc">сандар</span> мен <span class="acc">деректер</span></h2>
+    <p class="ph-desc">Ұлттық статистика бюросының ресми ақпараты бойынша (2025-2026 жж.)</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-number">95.6%</div><div class="stat-label">Интернет пайдаланушылар үлесі (16-74 жас)</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
+    <div class="stat-card"><div class="stat-number">92.4%</div><div class="stat-label">Цифрлық сауаттылық деңгейі</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
+    <div class="stat-card"><div class="stat-number">88.2%</div><div class="stat-label">Компьютер/ноутбук/планшет қолданушылар</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
+    <div class="stat-card"><div class="stat-number">700+</div><div class="stat-label">Азамат ХҚКО-да тегін оқытудан өтті (бір айда)</div><div class="stat-source">«Азаматтарға арналған үкімет» КЕ, 2026 ж.</div></div>
+    <div class="stat-card"><div class="stat-number">99.5%</div><div class="stat-label">Үй шаруашылықтарындағы ұялы телефон қолдану</div><div class="stat-source">Ұлттық статистика бюросы, 2025 ж.</div></div>
+    <div class="stat-card"><div class="stat-number">#digital2026</div><div class="stat-label">Цифрландыру және жасанды интеллект жылы</div><div class="stat-source">Қазақстан Республикасы Үкіметінің бастамасы</div></div>
+  </div>
+
+  <!-- ЖАҢАЛЫҚТАР БЛОГЫ -->
+  <div class="ph" style="margin-top: 3rem;">
+    <div class="ph-tag">📰 // ЦИФРЛАНДЫРУ ЖАҢАЛЫҚТАРЫ</div>
+    <h2 class="ph-title">Соңғы <span class="acc">өзгерістер</span> мен <span class="acc">бастамалар</span></h2>
+    <p class="ph-desc">Еліміздегі цифрлық сауаттылық пен қызметтерді дамыту бағытындағы жаңалықтар.</p>
+  </div>
+
+  <div class="news-list">
+    <div class="news-item">
+      <div class="news-date">13 Сәуір 2026</div>
+      <div class="news-title">700-ге жуық қазақстандық бір айда ХҚКО-ларда цифрлық сауаттылықты үйренді</div>
+      <div class="news-desc">Наурыз айынан бастап ХҚКО-ларда цифрлық сауаттылық бойынша оқыту курстары Қазақстанның барлық өңірінде қолжетімді болды. Бір айдың ішінде шамамен 700 қазақстандық оқудан өтіп, мемлекеттік қызметтерді онлайн алуды меңгерген.</div>
+      <div class="news-source">Дереккөз: «Азаматтарға арналған үкімет» мемлекеттік корпорациясы</div>
+    </div>
+    <div class="news-item">
+      <div class="news-date">01 Сәуір 2026</div>
+      <div class="news-title">Қазақстандықтардың 95,6% интернет қолданады</div>
+      <div class="news-desc">Ұлттық статистика бюросының мәліметінше, 2025 жылы 16-74 жас аралығындағы интернет пайдаланушылар үлесі 95,6% құраған. Цифрлық сауаттылық деңгейі 92,4% жеткен.</div>
+      <div class="news-source">Дереккөз: Ұлттық статистика бюросы</div>
+    </div>
+  </div>
+
+  <!-- ҚОСЫМША РЕСУРСТАР БЛОГЫ -->
+  <div class="ph" style="margin-top: 3rem;">
+    <div class="ph-tag">🔗 // ПАЙДАЛЫ РЕСУРСТАР</div>
+    <h2 class="ph-title">Өз біліміңізді <span class="acc">тереңдету</span> үшін</h2>
+    <p class="ph-desc">Цифрлық сауаттылықты дамытуға арналған ресми және ғылыми ресурстар.</p>
+  </div>
+
+  <div class="resources-grid">
+    <a href="https://stat.gov.kz/industries/business-statistics/stat-it/dynamic-tables/" target="_blank" class="resource-card">
+      <div class="resource-icon">📊</div>
+      <div class="resource-title">Ұлттық статистика бюросы</div>
+      <div class="resource-desc">АКТ статистикасы, динамикалық кестелер және цифрлық сауаттылық индикаторлары.</div>
+      <div class="resource-link">stat.gov.kz →</div>
+    </a>
+    <a href="#" class="resource-card" id="researchPaperLink">
+      <div class="resource-icon">🎓</div>
+      <div class="resource-title">Қазақстанның цифрлық трансформациясы</div>
+      <div class="resource-desc">Назарбаев Университетінің Қазақстанның цифрлық дайындығын талдауы (KZ-DRI).</div>
+      <div class="resource-link">Зерттеуді оқу →</div>
+    </a>
+    <a href="https://egov.kz" target="_blank" class="resource-card">
+      <div class="resource-icon">🇰🇿</div>
+      <div class="resource-title">Электрондық үкімет</div>
+      <div class="resource-desc">Мемлекеттік қызметтердің бірыңғай платформасы.</div>
+      <div class="resource-link">egov.kz →</div>
+    </a>
+  </div>
+</section>
+
+    <!-- TIPS -->
+    <section id="tips" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="ҚАУІПСІЗДІК" data-ru="БЕЗОПАСНОСТЬ">ҚАУІПСІЗДІК</span></div><h1 class="ph-title" data-kk="Цифрлық қауіпсіздік <span class='acc'>кеңестері</span>" data-ru="Советы по <span class='acc'>цифровой безопасности</span>">Цифрлық қауіпсіздік <span class="acc">кеңестері</span></h1></div>
+      <div>
+        <div class="tip-row"><div class="tip-n">01</div><div><h4>🔑 <span data-kk="Сенімді пароль қой" data-ru="Надёжный пароль">Сенімді пароль қой</span></h4><p data-kk="Пароль ұзын болуы керек – кем дегенде 12 символ. Әріптерді (кіші, үлкен), сандарды және арнайы белгілерді (!@#$%) қолдан. Бір парольді бірнеше аккаунтта қайталама. Есіңде ұстау қиын болса, пароль менеджерін (Bitwarden, 1Password) пайдалан. Ол барлық парольдеріңді шифрлап сақтайды." data-ru="Пароль должен быть длинным – минимум 12 символов. Используй буквы (прописные и строчные), цифры и специальные символы (!@#$%). Не повторяй один пароль на нескольких аккаунтах. Если сложно запомнить, используй менеджер паролей (Bitwarden, 1Password). Он шифрует и хранит все твои пароли.">Пароль ұзын болуы керек – кем дегенде 12 символ. Әріптерді (кіші, үлкен), сандарды және арнайы белгілерді (!@#$%) қолдан. Бір парольді бірнеше аккаунтта қайталама. Есіңде ұстау қиын болса, пароль менеджерін (Bitwarden, 1Password) пайдалан. Ол барлық парольдеріңді шифрлап сақтайды.</p></div></div>
+        <div class="tip-row"><div class="tip-n">02</div><div><h4>✅ <span data-kk="Екі факторлы аутентификацияны (2FA) қос" data-ru="Двухфакторная аутентификация (2FA)">Екі факторлы аутентификацияны (2FA) қос</span></h4><p data-kk="Бұл – парольден кейін тағы бір қорғаныс деңгейі. Кірген кезде телефонға немесе арнайы қосымшаға код келеді. SMS-тен гөрі Google Authenticator, Microsoft Authenticator немесе TOTP қолданғаны дұрыс. Егер мүмкіндік болса, физикалық ключті (YubiKey) де қолдануға болады. Бұл хакерлерге парольді білсе де аккаунтыңа кіруге мүмкіндік бермейді." data-ru="Это второй уровень защиты после пароля. При входе код приходит на телефон или в приложение. Лучше использовать Google Authenticator, Microsoft Authenticator или TOTP вместо SMS. Если возможно, также используй физический ключ (YubiKey). Это не позволит хакерам войти в твой аккаунт, даже если они узнают пароль.">Бұл – парольден кейін тағы бір қорғаныс деңгейі. Кірген кезде телефонға немесе арнайы қосымшаға код келеді. SMS-тен гөрі Google Authenticator, Microsoft Authenticator немесе TOTP қолданғаны дұрыс. Егер мүмкіндік болса, физикалық ключті (YubiKey) де қолдануға болады. Бұл хакерлерге парольді білсе де аккаунтыңа кіруге мүмкіндік бермейді.</p></div></div>
+        <div class="tip-row"><div class="tip-n">03</div><div><h4>🚫 <span data-kk="Фишингтен қалай сақтануға болады?" data-ru="Фишингтен қалай сақтануға болады?">Фишингтен қалай сақтануға болады?</span></h4><p data-kk="Егер банктен, пошта қызметінен немесе әлеуметтік желіден хат немесе SMS келсе, жіберушіні мұқият тексер. Сілтемеге бірден баспа – тінтуір курсорын апарып, нақты мекенжайды көр. Ресми доменнің жазылуында бір әріп қате болуы мүмкін (мысалы, google.com орнына go0gle.com). Банктер SMS-код, пароль, карта нөмірі сияқты құпия деректерді ешқашан сұрамайды. Күдіктенсең, ресми сайттағы телефонға өзің қоңырау шал." data-ru="Егер банктен, пошта қызметінен немесе әлеуметтік желіден хат немесе SMS келсе, жіберушіні мұқият тексер. Сілтемеге бірден баспа – тінтуір курсорын апарып, нақты мекенжайды көр. Ресми доменнің жазылуында бір әріп қате болуы мүмкін (мысалы, google.com орнына go0gle.com). Банктер SMS-код, пароль, карта нөмірі сияқты құпия деректерді ешқашан сұрамайды. Күдіктенсең, ресми сайттағы телефонға өзің қоңырау шал.">Егер банктен, пошта қызметінен немесе әлеуметтік желіден хат немесе SMS келсе, жіберушіні мұқият тексер. Сілтемеге бірден баспа – тінтуір курсорын апарып, нақты мекенжайды көр. Ресми доменнің жазылуында бір әріп қате болуы мүмкін (мысалы, google.com орнына go0gle.com). Банктер SMS-код, пароль, карта нөмірі сияқты құпия деректерді ешқашан сұрамайды. Күдіктенсең, ресми сайттағы телефонға өзің қоңырау шал.</p></div></div>
+        <div class="tip-row"><div class="tip-n">04</div><div><h4>🌐 <span data-kk="Қоғамдық Wi-Fi желілеріне сақ бол" data-ru="Опасность открытого Wi-Fi">Қоғамдық Wi-Fi желілеріне сақ бол</span></h4><p data-kk="Кафелер, әуежайлар, сауда орталықтарындағы тегін Wi-Fi көбінесе шифрланбаған. Хакерлер сол желіге қосылып, трафигіңді ұстап ала алады. Мұндай желіде банктік операциялар жасама, поштаңа кірме, құпия сөз енгізбе. Егер әлдеқайда қолдануға тура келсе, VPN қосуды ұмытпа. VPN трафигіңді шифрлайды, тіпті ашық желіде де деректерің қорғалады." data-ru="Бесплатный Wi-Fi в кафе, аэропортах и торговых центрах часто не зашифрован. Хакеры могут подключиться к такой сети и перехватить твой трафик. В открытом Wi-Fi не делай банковские операции, не входи в почту, не вводи пароли. Если всё же нужно, включи VPN. VPN шифрует твой трафик – твои данные защищены даже в открытой сети.">Кафелер, әуежайлар, сауда орталықтарындағы тегін Wi-Fi көбінесе шифрланбаған. Хакерлер сол желіге қосылып, трафигіңді ұстап ала алады. Мұндай желіде банктік операциялар жасама, поштаңа кірме, құпия сөз енгізбе. Егер әлдеқайда қолдануға тура келсе, VPN қосуды ұмытпа. VPN трафигіңді шифрлайды, тіпті ашық желіде де деректерің қорғалады.</p></div></div>
+        <div class="tip-row"><div class="tip-n">05</div><div><h4>🤖 <span data-kk="Жасанды интеллектпен жұмыс істегенде абай бол" data-ru="Безопасность при работе с AI">Жасанды интеллектпен жұмыс істегенде абай бол</span></h4><p data-kk="ChatGPT, Gemini және басқа AI модельдері көмекші ретінде өте пайдалы, бірақ оларға жеке деректеріңді – паспорт нөмірің, ИИН, карта деректері, құпия сөздеріңді енгізбе. Бұл деректер серверде сақталып, қауіпсіздік олқылығы болуы мүмкін. Сонымен қатар, AI кейде сенімсіз ақпарат береді (hallucination), сондықтан маңызды мәселелерде жауаптарын 2-3 басқа көзден тексеріп алған жөн." data-ru="ChatGPT, Gemini и другие AI модели очень полезны как помощники, но не вводи в них личные данные – номер паспорта, ИИН, реквизиты карты, пароли. Эти данные хранятся на серверах и могут быть скомпрометированы. Кроме того, AI иногда дает неверную информацию (hallucination), поэтому для важных вопросов проверь ответы ещё в 2-3 источниках.">ChatGPT, Gemini және басқа AI модельдері көмекші ретінде өте пайдалы, бірақ оларға жеке деректеріңді – паспорт нөмірің, ИИН, карта деректері, құпия сөздеріңді енгізбе. Бұл деректер серверде сақталып, қауіпсіздік олқылығы болуы мүмкін. Сонымен қатар, AI кейде сенімсіз ақпарат береді (hallucination), сондықтан маңызды мәселелерде жауаптарын 2-3 басқа көзден тексеріп алған жөн.</p></div></div>
+        <div class="tip-row"><div class="tip-n">06</div><div><h4>📱 <span data-kk="Қосымшалардың рұқсаттарын бақыла" data-ru="Контроль разрешений приложений">Қосымшалардың рұқсаттарын бақыла</span></h4><p data-kk="Қосымша орнатқанда, оның не сұрап тұрғанына назар аудар. Фонарик қосымшасы неге контактілеріңе немесе орналасқан жеріңе қолжеткізу керек? Ойынға микрофон не үшін керек? Артық рұқсаттарды берме. Рұқсатты кейін телефон баптауларынан өшіріп тастауға болады. Қолданбаны ұзақ уақыт қолданбасаң, оны жойып жібер." data-ru="Когда устанавливаешь приложение, обрати внимание на то, что оно просит. Зачем фонарику доступ к контактам или местоположению? Для чего игре нужен микрофон? Не давай лишние разрешения. Разрешения можно отозвать позже в настройках телефона. Если давно не пользуешься приложением – удали его.">Қосымша орнатқанда, оның не сұрап тұрғанына назар аудар. Фонарик қосымшасы неге контактілеріңе немесе орналасқан жеріңе қолжеткізу керек? Ойынға микрофон не үшін керек? Артық рұқсаттарды берме. Рұқсатты кейін телефон баптауларынан өшіріп тастауға болады. Қолданбаны ұзақ уақыт қолданбасаң, оны жойып жібер.</p></div></div>
+      </div>
+    </section>
+
+    <!-- AI -->
+    <section id="ai" class="page">
+      <div class="ph"><div class="ph-tag">// AI SIMULATOR</div><h1 class="ph-title" data-kk="Нақты жағдайда <span class='acc'>не істер едің?</span>" data-ru="Что бы ты сделал в <span class='acc'>реальной ситуации?</span>">Нақты жағдайда <span class="acc">не істер едің?</span></h1><p class="ph-desc" data-kk="Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың." data-ru="Опиши ситуацию — AI оценит угрозу. В режиме симуляции тренируй распознавание манипуляций.">Оқиғаны жаз — AI қауіп деңгейін бағалайды. Симуляция режимінде манипуляцияны тануды жаттықтырасың.</p></div>
+      <div class="sim-tabs" style="margin-bottom:1rem;"><button class="stab on" id="t1" onclick="setMode('adv')">🛡 <span data-kk="Кеңесші" data-ru="Советник">Кеңесші</span></button><button class="stab" id="t2" onclick="setMode('sim')">🎭 <span data-kk="Симуляция" data-ru="Симуляция">Симуляция</span></button></div>
+      <div id="advPanel">
+        <div class="sim-wrap"><div class="sim-in"><p class="sim-md" id="smd"></p><div style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.5rem;" data-kk="// ДАЙЫН МЫСАЛДАР" data-ru="// ГОТОВЫЕ ПРИМЕРЫ">// ДАЙЫН МЫСАЛДАР</div><div class="chip-wrap" id="chips"></div><textarea class="sim-ta" id="sta" placeholder="..."></textarea><button class="gbtn" id="sbtn" onclick="sendAIAdv()" style="width:100%">◉ <span data-kk="AI НҰСҚАУЫН АЛУ" data-ru="ПОЛУЧИТЬ СОВЕТ AI">AI НҰСҚАУЫН АЛУ</span></button></div><div class="sim-out" id="sout"><div class="sim-empty" id="se"><div class="sim-empty-ico">◉</div><span data-kk="Жағдай жазып жіберіңіз" data-ru="Опишите ситуацию и отправьте">Жағдай жазып жіберіңіз</span></div><div class="dots-loader" id="sl"><div class="dots-text" id="slt">AI...</div><div class="dots-row"><span></span><span></span><span></span></div></div><div id="sr" style="display:none"></div></div></div>
+      </div>
+      <div id="simPanel" style="display:none;">
+        <div class="sim-sel"><div class="sim-sel-label" data-kk="Сценарий" data-ru="Сценарий">Сценарий</div><select id="simScenario" class="sim-select"></select></div>
+        <div class="sim-chat-wrap"><div class="sim-chat-box" id="simChatBox"><div class="sim-empty" id="simEmpty" style="display:flex;"><div class="sim-empty-ico">🎭</div><span data-kk="Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз" data-ru="Для начала симуляции нажмите 'СТАРТ'">Симуляцияны бастау үшін 'БАСТАУ' батырмасын басыңыз</span></div><div id="simMessages" style="display:none;"></div><div class="dots-loader" id="simLoader" style="display:none;"><div class="dots-text">...</div><div class="dots-row"><span></span><span></span><span></span></div></div></div><div class="sim-chat-input"><textarea class="sim-ta" id="simInput" placeholder="Жауабыңызды жазыңыз..." rows="2"></textarea><div style="display:flex;gap:.5rem;margin-top:.5rem;"><button class="gbtn" id="simSendBtn" disabled>◉ <span data-kk="ЖІБЕРУ" data-ru="ОТПРАВИТЬ">ЖІБЕРУ</span></button><button class="gbtn-outline" id="simStartBtn">▶ <span data-kk="БАСТАУ" data-ru="СТАРТ">БАСТАУ</span></button><button class="gbtn-outline" id="simEndBtn" disabled>■ <span data-kk="АЯҚТАУ" data-ru="ЗАВЕРШИТЬ">АЯҚТАУ</span></button></div></div><div id="simResult" style="display:none;margin-top:1rem;"></div></div>
+      </div>
+    </section>
+
+    <!-- COURSE VIEW -->
+    <section id="quiz" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="КУРС БЕТІ" data-ru="СТРАНИЦА КУРСА">КУРС БЕТІ</span></div><h1 class="ph-title" data-kk="Оқу <span class='acc'>бағдарламасы</span>" data-ru="<span class='acc'>Программа</span> обучения">Оқу <span class="acc">бағдарламасы</span></h1><p class="ph-desc" data-kk="Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат." data-ru="Модули, мини‑тесты и итоговый тест. После завершения — рейтинг и сертификат.">Модульдер, мини‑тесттер және қорытынды тест. Курс аяқталса — рейтинг және сертификат.</p></div>
+      <div id="courseView"></div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="lb" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="РЕЙТИНГ" data-ru="РЕЙТИНГ">РЕЙТИНГ</span></div><h1 class="ph-title" data-kk="Ең жоғары <span class='acc'>нәтижелер</span>" data-ru="Лучшие <span class='acc'>результаты</span>">Ең жоғары <span class="acc">нәтижелер</span></h1></div>
+      <div class="lbtable"><div class="lbhead"><div>#</div><div data-kk="АТЫ" data-ru="ИМЯ">АТЫ</div><div data-kk="ҰПАЙ" data-ru="ОЧКИ">ҰПАЙ</div><div data-kk="КҮНІ" data-ru="ДАТА">КҮНІ</div></div><div id="lbb"></div></div>
+      <p style="font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;" data-kk="// нақты уақытта жаңартылады" data-ru="// обновляется в реальном времени">// нақты уақытта жаңартылады</p>
+    </section>
+
+    <!-- COURSES LIST -->
+    <section id="courses" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="КУРСТАР" data-ru="КУРСЫ">КУРСТАР</span></div><h1 class="ph-title" data-kk="7 негізгі <span class='acc'>курс</span>" data-ru="7 основных <span class='acc'>курсов</span>">7 негізгі <span class="acc">курс</span></h1><p class="ph-desc" data-kk="Әр курс: 3 модуль, мини‑тест және қорытынды тест." data-ru="Каждый курс: 3 модуля, мини‑тест и итоговый тест.">Әр курс: 3 модуль, мини‑тест және қорытынды тест.</p></div>
+      <div id="courseList" class="course-grid"></div>
+    </section>
+
+    <!-- SURVEY -->
+    <section id="survey" class="page">
+      <div class="ph"><div class="ph-tag">// <span data-kk="ЗЕРТТЕУ" data-ru="ИССЛЕДОВАНИЕ">ЗЕРТТЕУ</span></div><h1 class="ph-title" data-kk="<span class='acc'>Сауалнама</span>" data-ru="<span class='acc'>Опрос</span>"><span class="acc">Сауалнама</span></h1><p class="ph-desc" data-kk="Зерттеу жұмысы үшін сауалнамаға қатысыңыз." data-ru="Примите участие в опросе для исследования.">Зерттеу жұмысы үшін сауалнамаға қатысыңыз.</p></div>
+      <div class="sform"><div id="sf"><div class="sq"><div class="sql" data-kk="1. Күніне орташа қанша сағат интернет пайдаланасыз?" data-ru="1. Сколько часов в день вы пользуетесь интернетом?">1. Күніне орташа қанша сағат интернет пайдаланасыз?</div><div class="ropts"><label class="ropt"><input type="radio" name="q1" value="1"><span data-kk="1–2 сағат" data-ru="1–2 часа">1–2 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="2"><span data-kk="3–4 сағат" data-ru="3–4 часа">3–4 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="3"><span data-kk="5–6 сағат" data-ru="5–6 часов">5–6 сағат</span></label><label class="ropt"><input type="radio" name="q1" value="4"><span data-kk="6+ сағат" data-ru="6+ часов">6+ сағат</span></label></div></div><div class="sq"><div class="sql" data-kk="2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?" data-ru="2. Используете одинаковый пароль для всех аккаунтов?">2. Барлық аккаунтта бірдей пароль пайдаланасыз ба?</div><div class="ropts"><label class="ropt"><input type="radio" name="q2" value="yes"><span data-kk="Иә" data-ru="Да">Иә</span></label><label class="ropt"><input type="radio" name="q2" value="sometimes"><span data-kk="Кейде бірдей" data-ru="Иногда одинаковые">Кейде бірдей</span></label><label class="ropt"><input type="radio" name="q2" value="no"><span data-kk="Жоқ, бөлек" data-ru="Нет, разные">Жоқ, бөлек</span></label></div></div><div class="sq"><div class="sql" data-kk="3. Фишинг дегенді білесіз бе?" data-ru="3. Знаете ли вы, что такое фишинг?">3. Фишинг дегенді білесіз бе?</div><div class="ropts"><label class="ropt"><input type="radio" name="q3" value="yes"><span data-kk="Иә, жақсы білемін" data-ru="Да, хорошо знаю">Иә, жақсы білемін</span></label><label class="ropt"><input type="radio" name="q3" value="approx"><span data-kk="Шамамен білемін" data-ru="Примерно знаю">Шамамен білемін</span></label><label class="ropt"><input type="radio" name="q3" value="no"><span data-kk="Естіген жоқпын" data-ru="Не слышал">Естіген жоқпын</span></label></div></div><div class="sq"><div class="sql" data-kk="4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз" data-ru="4. Оцените свой уровень цифровой безопасности">4. Цифрлық қауіпсіздік деңгейіңізді бағалаңыз</div><div class="ropts"><label class="ropt"><input type="radio" name="q4" value="high"><span data-kk="Жоғары" data-ru="Высокий">Жоғары</span></label><label class="ropt"><input type="radio" name="q4" value="mid"><span data-kk="Орташа" data-ru="Средний">Орташа</span></label><label class="ropt"><input type="radio" name="q4" value="low"><span data-kk="Төмен" data-ru="Низкий">Төмен</span></label></div></div><button class="gbtn" style="max-width:180px" onclick="submitS()"><span data-kk="ЖІБЕРУ →" data-ru="ОТПРАВИТЬ →">ЖІБЕРУ →</span></button></div><div class="sdone" id="sd"><div class="sdone-ico">✅</div><h3 data-kk="Рахмет!" data-ru="Спасибо!">Рахмет!</h3><p style="color:var(--muted2);margin-top:.4rem;" data-kk="Жауабыңыз қабылданды." data-ru="Ваш ответ принят.">Жауабыңыз қабылданды.</p></div></div>
+    </section>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
