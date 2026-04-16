@@ -9,14 +9,6 @@ const AI_API_ENDPOINT = normalizeAiEndpoint(
 const AI_ANALYZE_ENDPOINT = toAnalyzeEndpoint(AI_API_ENDPOINT);
 const AI_SCORES_ENDPOINT = AI_API_ENDPOINT.replace(/\/api\/ai\/?$/i, '/api/scores');
 
-const AUTH_BASE = (() => {
-  const ai = AI_API_ENDPOINT;
-  if (/^https?:\/\//i.test(ai)) {
-    return ai.replace(/\/api\/ai\/?$/i, '');
-  }
-  return '';
-})();
-
 function normalizeAiEndpoint(v){
   const s=(v??'').toString().trim();
   if(!s) return '/api/ai';
@@ -159,7 +151,7 @@ async function login(username, password) {
   let resp;
   let data = {};
   try {
-    resp = await fetch(AUTH_BASE + '/api/auth/login', {
+    resp = await fetch('/api/auth/login', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username, password})
@@ -190,7 +182,7 @@ async function register(username, password) {
   let resp;
   let data = {};
   try {
-    resp = await fetch(AUTH_BASE + '/api/auth/register', {
+    resp = await fetch('/api/auth/register', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username, password})
@@ -1027,7 +1019,7 @@ function renderFinalQuestion(courseId){
           <div class="cert-sc">${pct}%</div>
         </div>
         <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${pct},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
-        <button class="gbtn-outline" onclick="resetFinalTest('${courseId}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
+        <button class="gbtn-outline" onclick="resetFinalTest('${c.id}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
       </div>
     `;
     return;
@@ -1096,7 +1088,6 @@ function resetFinalTest(courseId){
 
 function submitFinalScore(course,pct){
   addBoard(pName,pct,course.id,course.title);
-  renderFinalQuestion(courseId);
 }
 
 // ========== QUIZ (10 сұрақ) ==========
@@ -1460,7 +1451,7 @@ window.onload = () => {
   // Автентификацияны тексеру
   const token = localStorage.getItem('token');
   if(token) {
-    fetch(AUTH_BASE + '/api/auth/me', { headers:{'Authorization':`Bearer ${token}`} })
+    fetch('/api/auth/me', { headers:{'Authorization':`Bearer ${token}`} })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => {
         currentToken = token;
