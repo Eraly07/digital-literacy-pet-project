@@ -148,13 +148,20 @@ async function login(username, password) {
   const err = document.getElementById('authError');
   err.textContent = '';
   if(!username || !password) { err.textContent = lang==='kk' ? 'Логин және пароль қажет' : 'Логин и пароль обязательны'; return; }
-  const resp = await fetch('/api/auth/login', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username, password})
-  }).catch(e=>({ok:false, error:e.message}));
-  const data = await resp.json().catch(()=>({}));
-  if(!resp.ok) { err.textContent = data.error || 'Login failed'; return; }
+  let resp;
+  let data = {};
+  try {
+    resp = await fetch('/api/auth/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username, password})
+    });
+    data = await resp.json().catch(() => ({}));
+  } catch (e) {
+    err.textContent = e?.message || (lang==='kk' ? 'Сервер қатесі' : 'Ошибка сервера');
+    return;
+  }
+  if(!resp.ok) { err.textContent = data.error || (lang==='kk' ? 'Кіру қатесі' : 'Ошибка входа'); return; }
   currentToken = data.token;
   pName = data.username;
   localStorage.setItem('token', currentToken);
@@ -172,13 +179,20 @@ async function register(username, password) {
   if(!username || !password) { err.textContent = lang==='kk' ? 'Логин және пароль қажет' : 'Логин и пароль обязательны'; return; }
   if(username.length < 3 || username.length > 24) { err.textContent = lang==='kk' ? '3-24 символ' : '3-24 символа'; return; }
   if(password.length < 4) { err.textContent = lang==='kk' ? 'Кемінде 4 символ' : 'Минимум 4 символа'; return; }
-  const resp = await fetch('/api/auth/register', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username, password})
-  }).catch(e=>({ok:false, error:e.message}));
-  const data = await resp.json().catch(()=>({}));
-  if(!resp.ok) { err.textContent = data.error || 'Registration failed'; return; }
+  let resp;
+  let data = {};
+  try {
+    resp = await fetch('/api/auth/register', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username, password})
+    });
+    data = await resp.json().catch(() => ({}));
+  } catch (e) {
+    err.textContent = e?.message || (lang==='kk' ? 'Сервер қатесі' : 'Ошибка сервера');
+    return;
+  }
+  if(!resp.ok) { err.textContent = data.error || (lang==='kk' ? 'Тіркелу қатесі' : 'Ошибка регистрации'); return; }
   currentToken = data.token;
   pName = data.username;
   localStorage.setItem('token', currentToken);
