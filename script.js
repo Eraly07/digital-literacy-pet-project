@@ -1328,7 +1328,6 @@ function _simSetBtns(sending){
   if(start) start.disabled = sending;
 }
 
-// ==================== SIM START ====================
 async function simStart(){
     simChatHistory = [];
     simChatActive = true;
@@ -1336,75 +1335,71 @@ async function simStart(){
     document.getElementById('simResult').style.display='none';
     _simSetBtns(true);
     _simSetLoader(true);
-
+    
     try{
+        // Бос messages жібереміз, сервер бірінші хабарды AI-сыз қайтарады
         const res = await fetchWithRetry(AI_API_ENDPOINT,{
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ 
-                mode: 'sim', 
-                scenario: simCurrentScenario,
-                messages: [],                    // бірінші рет бос
-                system_prompt: true              // backend-қа белгі
-            })
+            body:JSON.stringify({ mode:'sim', messages:[], scenario:simCurrentScenario })
         });
-
         const data = await res.json();
-        const firstMsg = data?.content || getFallbackMessage(simCurrentScenario);
         
-        simChatHistory.push({role: 'assistant', content: firstMsg});
+        // Егер сервер қате қайтарса, fallback қолданамыз
+        let firstMsg = data?.content;
+        if (!firstMsg || firstMsg.includes('cannot') || firstMsg.includes('sorry') || firstMsg.includes('ai')) {
+            const fallbacks = {
+                bank: lang==='kk' ? 'Сәлеметсіз бе! Бұл Халық Банкінің қауіпсіздік бөлімі. Сіздің шотыңызда күдікті операция анықталды.' : 'Здравствуйте! Это служба безопасности банка. На вашем счете подозрительная операция.',
+                delivery: lang==='kk' ? 'Сәлем! Сіздің жөнелтіліміңіз тоқтап қалды, мекенжайды растау керек.' : 'Здравствуйте! Ваша посылка задержана, нужно подтвердить адрес.',
+                prize: lang==='kk' ? 'Құттықтаймыз! Сіз біздің ұтыс ойынымызда 500 000 теңге ұттыңыз!' : 'Поздравляем! Вы выиграли 500 000 тенге!',
+                friend: lang==='kk' ? 'Сәлем! Қалайсың? Көптен хабарласпадық 😊' : 'Привет! Как дела? Давно не общались 😊'
+            };
+            firstMsg = fallbacks[simCurrentScenario] || fallbacks.bank;
+        }
+        
+        simChatHistory.push({role:'assistant', content:firstMsg});
         _simRenderChat();
     } catch(e){
-        console.error(e);
-        simChatHistory.push({role: 'assistant', content: 'Қате шықты, қайта бастаңыз.'});
+        console.error('simStart error:', e);
+        const errMsg = lang==='kk' ? 'Қате, қайта бастаңыз.' : 'Ошибка, начните заново.';
+        simChatHistory.push({role:'assistant', content:errMsg});
         _simRenderChat();
     } finally{
         _simSetLoader(false);
         _simSetBtns(false);
     }
 }
-
-// ==================== SIM SEND ====================
 async function simSend(){
-    if(!simChatActive) return;
-    
-    const input = document.getElementById('simInput');
-    const txt = input.value.trim();
-    if(!txt) return;
-
-    input.value = '';
-    simChatHistory.push({role: 'user', content: txt});
-    _simRenderChat();
-    _simSetBtns(true);
-    _simSetLoader(true);
-
-    try{
-        // Соңғы 6-7 хабарламаны аламыз + system prompt болуы керек
-        const messagesToSend = simChatHistory.slice(-7);   // соңғы 7 хабарлама
-
-        const res = await fetchWithRetry(AI_API_ENDPOINT,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ 
-                mode: 'sim', 
-                scenario: simCurrentScenario,
-                messages: messagesToSend,        // ← маңызды!
-                system_prompt: true              // ← backend-қа сигнал
-            })
-        });
-
-        const data = await res.json();
-        let reply = data?.content || '...';
-
-        simChatHistory.push({role: 'assistant', content: reply});
-        _simRenderChat();
-    } catch(e){
-        simChatHistory.push({role: 'assistant', content: 'Байланыс қатесі.'});
-        _simRenderChat();
-    } finally{
-        _simSetLoader(false);
-        _simSetBtns(false);
+  if(!simChatActive) return;
+  const input = document.getElementById('simInput');
+  const txt = input.value.trim();
+  if(!txt) return;
+  input.value='';
+  simChatHistory.push({role:'user', content:txt});
+  _simRenderChat();
+  _simSetBtns(true);
+  _simSetLoader(true);
+  try{
+    const messagesToSend = simChatHistory.slice(-8);
+    const res = await fetchWithRetry(AI_API_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ mode:'sim', messages:messagesToSend, scenario:simCurrentScenario })
+    });
+    const data = await res.json();
+    let reply = data?.content || (lang==='kk'?'...':'...');
+    if(reply.toLowerCase().includes('cannot') || reply.toLowerCase().includes('sorry') || reply.toLowerCase().includes('ai')){
+      reply = lang==='kk'?'Қауіпсіздік мақсатында ақпаратыңызды тексеру керек. Кодты жіберіңіз.':'В целях безопасности необходимо проверить ваши данные. Отправьте код.';
     }
+    simChatHistory.push({role:'assistant', content:reply});
+    _simRenderChat();
+  }catch(e){
+    simChatHistory.push({role:'assistant', content:lang==='kk'?'Байланыс үзілді.':'Связь прервана.'});
+    _simRenderChat();
+  }finally{
+    _simSetLoader(false);
+    _simSetBtns(false);
+  }
 }
 
 async function simEnd(){
