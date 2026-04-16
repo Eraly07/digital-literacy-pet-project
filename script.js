@@ -9,6 +9,14 @@ const AI_API_ENDPOINT = normalizeAiEndpoint(
 const AI_ANALYZE_ENDPOINT = toAnalyzeEndpoint(AI_API_ENDPOINT);
 const AI_SCORES_ENDPOINT = AI_API_ENDPOINT.replace(/\/api\/ai\/?$/i, '/api/scores');
 
+const AUTH_BASE = (() => {
+  const ai = AI_API_ENDPOINT;
+  if (/^https?:\/\//i.test(ai)) {
+    return ai.replace(/\/api\/ai\/?$/i, '');
+  }
+  return '';
+})();
+
 function normalizeAiEndpoint(v){
   const s=(v??'').toString().trim();
   if(!s) return '/api/ai';
@@ -151,7 +159,7 @@ async function login(username, password) {
   let resp;
   let data = {};
   try {
-    resp = await fetch('/api/auth/login', {
+    resp = await fetch(AUTH_BASE + '/api/auth/login', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username, password})
@@ -182,7 +190,7 @@ async function register(username, password) {
   let resp;
   let data = {};
   try {
-    resp = await fetch('/api/auth/register', {
+    resp = await fetch(AUTH_BASE + '/api/auth/register', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username, password})
@@ -1452,7 +1460,7 @@ window.onload = () => {
   // Автентификацияны тексеру
   const token = localStorage.getItem('token');
   if(token) {
-    fetch('/api/auth/me', { headers:{'Authorization':`Bearer ${token}`} })
+    fetch(AUTH_BASE + '/api/auth/me', { headers:{'Authorization':`Bearer ${token}`} })
       .then(res => res.ok ? res.json() : Promise.reject())
       .then(data => {
         currentToken = token;
