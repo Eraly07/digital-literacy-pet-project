@@ -1329,43 +1329,46 @@ function _simSetBtns(sending){
 }
 
 async function simStart(){
-  simChatHistory = [];
-  simChatActive = true;
-  _simRenderChat();
-  document.getElementById('simResult').style.display='none';
-  _simSetBtns(true);
-  _simSetLoader(true);
-  try{
-    const res = await fetchWithRetry(AI_API_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ mode:'sim', messages:[], text:'start', scenario:simCurrentScenario })
-    });
-    const data = await res.json();
-    let firstMsg = data?.content || (lang==='kk'?'Сәлем! Бір минут уақытыңыз бар ма?':'Здравствуйте! У вас есть минута?');
-    // фильтр
-    const badWords = ['cannot','sorry','i am an ai','i\'m an ai','as an ai','language model','кешіріңіз, мен','мен ai','мен ии'];
-    const msgLow = firstMsg.toLowerCase();
-    if(badWords.some(w=>msgLow.includes(w)) || firstMsg.length < 10){
-      const fallbacks = {
-        bank: lang==='kk'?'Сәлеметсіз бе! Бұл Халық Банкінің қауіпсіздік бөлімі. Сіздің шотыңызда күдікті операция анықталды.':'Здравствуйте! Это служба безопасности банка. На вашем счете обнаружена подозрительная операция.',
-        delivery: lang==='kk'?'Сәлем! Сіздің жөнелтіліміңіз тоқтап қалды, мекенжайды растау керек.':'Здравствуйте! Ваша посылка задержана, нужно подтвердить адрес.',
-        prize: lang==='kk'?'Құттықтаймыз! Сіз біздің ұтыс ойынымызда 500 000 теңге ұттыңыз!':'Поздравляем! Вы выиграли 500 000 тенге в нашем розыгрыше!',
-        friend: lang==='kk'?'Сәлем! Қалайсың? Көптен хабарласпадық 😊':'Привет! Как дела? Давно не общались 😊'
-      };
-      firstMsg = fallbacks[simCurrentScenario] || fallbacks.bank;
+    simChatHistory = [];
+    simChatActive = true;
+    _simRenderChat();
+    document.getElementById('simResult').style.display='none';
+    _simSetBtns(true);
+    _simSetLoader(true);
+    
+    try{
+        // Бос messages жібереміз, сервер бірінші хабарды AI-сыз қайтарады
+        const res = await fetchWithRetry(AI_API_ENDPOINT,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ mode:'sim', messages:[], scenario:simCurrentScenario })
+        });
+        const data = await res.json();
+        
+        // Егер сервер қате қайтарса, fallback қолданамыз
+        let firstMsg = data?.content;
+        if (!firstMsg || firstMsg.includes('cannot') || firstMsg.includes('sorry') || firstMsg.includes('ai')) {
+            const fallbacks = {
+                bank: lang==='kk' ? 'Сәлеметсіз бе! Бұл Халық Банкінің қауіпсіздік бөлімі. Сіздің шотыңызда күдікті операция анықталды.' : 'Здравствуйте! Это служба безопасности банка. На вашем счете подозрительная операция.',
+                delivery: lang==='kk' ? 'Сәлем! Сіздің жөнелтіліміңіз тоқтап қалды, мекенжайды растау керек.' : 'Здравствуйте! Ваша посылка задержана, нужно подтвердить адрес.',
+                prize: lang==='kk' ? 'Құттықтаймыз! Сіз біздің ұтыс ойынымызда 500 000 теңге ұттыңыз!' : 'Поздравляем! Вы выиграли 500 000 тенге!',
+                friend: lang==='kk' ? 'Сәлем! Қалайсың? Көптен хабарласпадық 😊' : 'Привет! Как дела? Давно не общались 😊'
+            };
+            firstMsg = fallbacks[simCurrentScenario] || fallbacks.bank;
+        }
+        
+        simChatHistory.push({role:'assistant', content:firstMsg});
+        _simRenderChat();
+    } catch(e){
+        console.error('simStart error:', e);
+        const errMsg = lang==='kk' ? 'Қате, қайта бастаңыз.' : 'Ошибка, начните заново.';
+        simChatHistory.push({role:'assistant', content:errMsg});
+        _simRenderChat();
+    } finally{
+        _simSetLoader(false);
+        _simSetBtns(false);
     }
-    simChatHistory.push({role:'assistant', content:firstMsg});
-    _simRenderChat();
-  }catch(e){
-    simChatHistory.push({role:'assistant', content:lang==='kk'?'Қате, қайта бастаңыз.':'Ошибка, начните заново.'});
-    _simRenderChat();
-  }finally{
-    _simSetLoader(false);
-    _simSetBtns(false);
-  }
 }
-
 async function simSend(){
   if(!simChatActive) return;
   const input = document.getElementById('simInput');
