@@ -1011,6 +1011,8 @@ function renderFinalQuestion(courseId){
     const msg=pass
       ?(lang==='kk'?'ҚҰТТЫҚТАЙМЫЗ! Қорытынды тесттен өттіңіз.':'ПОЗДРАВЛЯЕМ! Итоговый тест пройден.')
       :(lang==='kk'?'14 очко жинай алмадыңыз. Материалды қайталап, қайта тапсырыңыз.':'Не набрано 14 очков. Повторите материал и попробуйте снова.');
+    const totalPoints=total*2;
+    const percent=Math.round((points/totalPoints)*100);
     if(pass && !f.submitted){
       f.submitted=true;
       submitFinalScore(c,points);
@@ -1024,9 +1026,9 @@ function renderFinalQuestion(courseId){
           <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
           <div class="cert-nm">${pName||'Anonymous'}</div>
           <div class="cert-sub">${lang==='kk'?'Курсты аяқтады':'Завершил курс'}: ${c.title}</div>
-          <div class="cert-sc">${points}</div>
+          <div class="cert-sc">${percent}%</div>
         </div>
-        <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${points},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
+        <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${percent},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
         <button class="gbtn-outline" onclick="resetFinalTest('${courseId}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
       </div>
     `;
@@ -1096,7 +1098,7 @@ function resetFinalTest(courseId){
 
 function submitFinalScore(course,points){
   addBoard(pName,points,course.id,course.title);
-  renderFinalQuestion(courseId);
+  renderFinalQuestion(course.id);
 }
 
 // ========== QUIZ (10 сұрақ) ==========
@@ -1146,6 +1148,7 @@ function nextQ(){qc++;qc>=QS.length?showRes():renderQ();}
 function showRes(){
   document.getElementById('qp').style.width='100%';
   const points = qs * 2;
+  const percent = Math.round((points/(QS.length*2))*100);
   const msg=points>=16?(lang==='kk'?'ЖОҒАРЫ ДЕҢГЕЙ — Керемет!':'ВЫСОКИЙ УРОВЕНЬ — Отлично!'):points>=12?(lang==='kk'?'ОРТАША — Жақсы нәтиже.':'СРЕДНИЙ — Хороший результат.'):(lang==='kk'?'БАСТАУЫШ — Материалдарды оқы.':'НАЧАЛЬНЫЙ — Изучи материалы.');
   const cn=pName||'Anonymous';
   if(pName) addBoard(pName,points,'quiz','Цифрлық сауаттылық тесті');
@@ -1158,9 +1161,9 @@ function showRes(){
         <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
         <div class="cert-nm">${cn}</div>
         <div class="cert-sub">${lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности'}</div>
-        <div class="cert-sc">${points}</div>
+        <div class="cert-sc">${percent}%</div>
       </div>
-      <button class="gbtn" onclick="dlCert('${cn}',${points})" style="margin:.75rem .3rem 0">
+      <button class="gbtn" onclick="dlCert('${cn}',${percent})" style="margin:.75rem .3rem 0">
         ⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}
       </button>`:''}
       <button class="gbtn-outline" onclick="resetQ()" style="margin:.75rem .3rem 0">
@@ -1191,7 +1194,7 @@ function dlCert(n,p,courseTitle){
     : (lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности');
   x.fillText(sub,400,260);
   x.fillStyle='#00f0c8';x.font='bold 54px monospace';x.shadowBlur=25;x.shadowColor='#00f0c8';
-  x.fillText(p,400,360);
+  x.fillText(p + '%',400,360);
   x.shadowBlur=0;x.fillStyle='#5a6480';x.font='12px monospace';
   x.fillText(new Date().getFullYear(),400,430);
   const a=document.createElement('a');a.download=`cert_${n}.png`;a.href=c.toDataURL();a.click();
