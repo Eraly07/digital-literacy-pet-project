@@ -274,7 +274,7 @@ async function renderLB(){
               <div>${r.name || (lang==='kk'?'Аноним':'Аноним')}</div>
               ${r.course?`<div class="lbsub">${r.course}</div>`:''}
             </div>
-            <div class="lbsc">${r.s}%</div>
+            <div class="lbsc">${r.s}</div>
             <div class="lbdt">${r.d}</div>
           </div>`).join('');
         return;
@@ -1006,27 +1006,27 @@ function renderFinalQuestion(courseId){
     return;
   }
   if(f.done){
-    const pct=Math.round((f.score/total)*100);
-    const pass=pct>=70;
+    const points = f.score * 2;
+    const pass=points>=14;
     const msg=pass
       ?(lang==='kk'?'ҚҰТТЫҚТАЙМЫЗ! Қорытынды тесттен өттіңіз.':'ПОЗДРАВЛЯЕМ! Итоговый тест пройден.')
-      :(lang==='kk'?'70% жинай алмадыңыз. Материалды қайталап, қайта тапсырыңыз.':'Не набрано 70%. Повторите материал и попробуйте снова.');
+      :(lang==='kk'?'14 очко жинай алмадыңыз. Материалды қайталап, қайта тапсырыңыз.':'Не набрано 14 очков. Повторите материал и попробуйте снова.');
     if(pass && !f.submitted){
       f.submitted=true;
-      submitFinalScore(c,pct);
+      submitFinalScore(c,points);
     }
     box.innerHTML=`
       <div style="text-align:center;padding:1rem 0">
-        <div class="res-pct">${pct}%</div>
-        <div style="font-size:1.7rem;margin-bottom:.4rem">${pct>=80?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐'}</div>
+        <div class="res-pct">${points}</div>
+        <div style="font-size:1.7rem;margin-bottom:.4rem">${points>=16?'⭐⭐⭐':points>=12?'⭐⭐':'⭐'}</div>
         <div class="res-msg">${msg}</div>
         ${pass?`<div class="certbox">
           <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
           <div class="cert-nm">${pName||'Anonymous'}</div>
           <div class="cert-sub">${lang==='kk'?'Курсты аяқтады':'Завершил курс'}: ${c.title}</div>
-          <div class="cert-sc">${pct}%</div>
+          <div class="cert-sc">${points}</div>
         </div>
-        <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${pct},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
+        <button class="gbtn" onclick="dlCert('${pName||'Anonymous'}',${points},'${c.title.replace(/'/g,"&#39;")}')" style="margin:.75rem .3rem 0">⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}</button>`:''}
         <button class="gbtn-outline" onclick="resetFinalTest('${courseId}')" style="margin:.75rem .3rem 0">↺ ${lang==='kk'?'ҚАЙТА':'СНОВА'}</button>
       </div>
     `;
@@ -1094,8 +1094,8 @@ function resetFinalTest(courseId){
   renderFinalQuestion(courseId);
 }
 
-function submitFinalScore(course,pct){
-  addBoard(pName,pct,course.id,course.title);
+function submitFinalScore(course,points){
+  addBoard(pName,points,course.id,course.title);
   renderFinalQuestion(courseId);
 }
 
@@ -1145,22 +1145,22 @@ function pickQ(i){
 function nextQ(){qc++;qc>=QS.length?showRes():renderQ();}
 function showRes(){
   document.getElementById('qp').style.width='100%';
-  const pct=Math.round(qs/QS.length*100);
-  const msg=pct>=80?(lang==='kk'?'ЖОҒАРЫ ДЕҢГЕЙ — Керемет!':'ВЫСОКИЙ УРОВЕНЬ — Отлично!'):pct>=60?(lang==='kk'?'ОРТАША — Жақсы нәтиже.':'СРЕДНИЙ — Хороший результат.'):(lang==='kk'?'БАСТАУЫШ — Материалдарды оқы.':'НАЧАЛЬНЫЙ — Изучи материалы.');
+  const points = qs * 2;
+  const msg=points>=16?(lang==='kk'?'ЖОҒАРЫ ДЕҢГЕЙ — Керемет!':'ВЫСОКИЙ УРОВЕНЬ — Отлично!'):points>=12?(lang==='kk'?'ОРТАША — Жақсы нәтиже.':'СРЕДНИЙ — Хороший результат.'):(lang==='kk'?'БАСТАУЫШ — Материалдарды оқы.':'НАЧАЛЬНЫЙ — Изучи материалы.');
   const cn=pName||'Anonymous';
-  if(pName) addBoard(pName,Math.round(qs/QS.length*100),'quiz','Цифрлық сауаттылық тесті');
+  if(pName) addBoard(pName,points,'quiz','Цифрлық сауаттылық тесті');
   document.getElementById('qb').innerHTML=`
     <div style="text-align:center;padding:1rem 0">
-      <div class="res-pct">${pct}%</div>
-      <div style="font-size:1.7rem;margin-bottom:.4rem">${pct>=80?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐'}</div>
+      <div class="res-pct">${points}</div>
+      <div style="font-size:1.7rem;margin-bottom:.4rem">${points>=16?'⭐⭐⭐':points>=12?'⭐⭐':'⭐'}</div>
       <div class="res-msg">${msg}</div>
-      ${pct>=60?`<div class="certbox">
+      ${points>=12?`<div class="certbox">
         <div class="cert-lbl">🎓 СЕРТИФИКАТ</div>
         <div class="cert-nm">${cn}</div>
         <div class="cert-sub">${lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности'}</div>
-        <div class="cert-sc">${pct}%</div>
+        <div class="cert-sc">${points}</div>
       </div>
-      <button class="gbtn" onclick="dlCert('${cn}',${pct})" style="margin:.75rem .3rem 0">
+      <button class="gbtn" onclick="dlCert('${cn}',${points})" style="margin:.75rem .3rem 0">
         ⬇ ${lang==='kk'?'СЕРТИФИКАТ':'СЕРТИФИКАТ'}
       </button>`:''}
       <button class="gbtn-outline" onclick="resetQ()" style="margin:.75rem .3rem 0">
@@ -1191,7 +1191,7 @@ function dlCert(n,p,courseTitle){
     : (lang==='kk'?'Цифрлық сауаттылық тестін аяқтады':'Завершил тест по цифровой грамотности');
   x.fillText(sub,400,260);
   x.fillStyle='#00f0c8';x.font='bold 54px monospace';x.shadowBlur=25;x.shadowColor='#00f0c8';
-  x.fillText(p+'%',400,360);
+  x.fillText(p,400,360);
   x.shadowBlur=0;x.fillStyle='#5a6480';x.font='12px monospace';
   x.fillText(new Date().getFullYear(),400,430);
   const a=document.createElement('a');a.download=`cert_${n}.png`;a.href=c.toDataURL();a.click();
